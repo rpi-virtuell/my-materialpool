@@ -101,11 +101,12 @@ EOF;
             $taxquery[] = $tax;
         }
 
-
+		$search = get_query_var("mp-search");
         $args = array(
 	        'post_type' => 'material',
 	        'posts_per_page' => -1,
 	        'tax_query' => $taxquery,
+            's' => $search
         );
 
 		$the_query = new WP_Query( $args );
@@ -115,6 +116,7 @@ EOF;
 			'paged'     => $paged,
 			'posts_per_page' => 10,
 			'tax_query' => $taxquery,
+			's' => $search
 		);
 
 		$the_query = new WP_Query( $args );
@@ -152,6 +154,10 @@ EOF;
 		$content .= <<<EOF
     </div>
     <div  style="float:left; width: 68%">
+    <form>
+        <input name="mp-search" id="mp-search" type="text" style="width: 100%;" value="$search" >
+    </form> 
+ 
 EOF;
 
 		if ( $the_query->have_posts() ) {
@@ -200,6 +206,7 @@ EOF;
 		$vars[] = "mpoolfacet_bildungsstufe";
 		$vars[] = "mpoolfacet_altersstufe";
 		$vars[] = "mpoolfacet_medientyp";
+		$vars[] = "mp-search";
 		return $vars;
 	}
 
@@ -213,6 +220,7 @@ EOF;
 		remove_filter( 'term_link', array( 'MyMaterialpool', 'term_link_filter' ) );
 		remove_filter( 'get_terms', array( 'MyMaterialpool', 'get_terms_filter') );
 		$tax = get_taxonomy( $taxonomies[0] );
+		$search = get_query_var("mp-search");
 
 		foreach ( $terms as $id => &$term ) {
 			$tax_query = $the_query->tax_query->queries;
@@ -221,8 +229,9 @@ EOF;
 				'taxonomy' 	=> 	$tax->name,
 				'field' 	=> 	'slug',
 				'terms'		=> 	$term->slug,
+
 			);
-			$query = new WP_Query( array( 'tax_query' => $tax_query ) );
+			$query = new WP_Query( array( 's' =>  $search,'tax_query' => $tax_query ) );
 			//If this term has no posts, don't display the link
 			if ( !$query->found_posts )
 				unset( $terms[ $id ] );
