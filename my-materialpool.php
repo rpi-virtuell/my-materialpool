@@ -30,6 +30,13 @@ class MyMaterialpool {
 
 	public static $plugin_url = NULL;
 
+	public static $template = "<div style='margin-bottom: 30px;border: 1px solid #000000;'>
+	<h2>{material_title}</h2>
+	<div>{material_kurzbeschreibung}</div>
+    <div><a href='{material_url}'>Zum Material</a></div>
+</div>
+";
+
     public  function __construct() {
 		self::$plugin_url = plugin_dir_url( __FILE__ );
 
@@ -172,12 +179,13 @@ EOF;
                 }
             }
 			while ( $the_query->have_posts() ) {
+			    $template = get_option('mympool-template', self::$template );
 				$the_query->the_post();
-				$content .= "<div style='margin-bottom: 30px;border: 1px solid #000000;'>";
-				$content .= "<h2>" . get_the_title() . "</h2>";
-				$content .= "<div>". get_metadata('post', get_the_ID(), 'material_kurzbeschreibung', true ). "</div>";
-				$content .= "<div><a href='". get_metadata('post', get_the_ID(), 'material_url', true ). "'>Zum Material</a></div>";
-				$content .= "</div>";
+				$template = str_replace( '{material_title}', get_the_title(), $template );
+				$template = str_replace( '{material_url}', get_metadata('post', get_the_ID(), 'material_url', true ), $template );
+				$template = str_replace( '{material_kurzbeschreibung}', get_metadata('post', get_the_ID(), 'material_kurzbeschreibung', true ), $template );
+				$template = str_replace( '{material_beschreibung}', get_metadata('post', get_the_ID(), 'material_beschreibung', true ), $template );
+				$content .= $template;
 			}
 			$content .= self::get_pagination($the_query);
 		}
@@ -288,10 +296,21 @@ EOF;
                 <table class="form-table">
                     <tr valign="top">
                         <th scope="row">Quellen</th>
-                        <td><input type="text" name="mympool-urls" class="large-text code" value="<?php echo esc_attr( get_option('mympool-urls') ); ?>"></td>
+                        <td>
+                            <textarea name="mympool-urls" class="large-text code" rows="8" ><?php echo esc_attr( get_option('mympool-urls', self::$template ) ); ?></textarea>
+                            <p>
+                                Urls: <br>
+                                Alle Materialien - https://material.rpi-virtuell.de/wp-json/wp/v2/material <br>
+                                Material einer Bildungsstufe - https://material.rpi-virtuell.de/wp-json/wp/v2/material/?bildungsstufe={id} <br>
+                                Material eines Medientypes - https://material.rpi-virtuell.de/wp-json/wp/v2/material/?medientyp={id} <br>
+                                Material einer Altersstufe - https://material.rpi-virtuell.de/wp-json/wp/v2/material/?altersstufe={id} <br>
+                                Material eines/r Autor(in) - https://material.rpi-virtuell.de/wp-json/wp/v2/material/?author={id}<br>
+
+                            </p>
+                         </td>
                     </tr>
                     <tr valign="top">
-                        <th scope="row">Maximale Anzahl</th>
+                        <th scope="row">Maximale Anzahl (pro URL)</th>
                         <td><input type="text" name="mympool-max-count" class=" code" value="<?php echo esc_attr( get_option('mympool-max-count') ); ?>"></td>
                     </tr>
                     <tr valign="top">
@@ -300,7 +319,10 @@ EOF;
                     </tr>
                     <tr valign="top">
                         <th scope="row">Template</th>
-                        <td><textarea name="mympool-template" class="large-text code" rows="8" ><?php echo esc_attr( get_option('mympool-template') ); ?></textarea></td>
+                        <td><textarea name="mympool-template" class="large-text code" rows="8" ><?php echo esc_attr( get_option('mympool-template', self::$template ) ); ?></textarea>
+                        <p>
+                            Folgende Macros sind möglich: {material_title}, {material_url}, {material_kurzbeschreibung}, {material_beschreibung}
+                        </p></td>
                     </tr>
                     <tr valign="top">
                         <th scope="row">Statistik</th>
@@ -432,6 +454,7 @@ EOF;
 	}
 
 	public static function importMaterial( $url ) {
+		error_log( 'in importMaterial');
 		global $wpdb;
         $import = true;
         $max = get_option( 'mympool-max-count', 10 );
@@ -442,6 +465,9 @@ EOF;
 	        error_log( ' import :' . $url );
 
 	        $response = self::getRemoteMaterial( $url );
+	        if ( $response === false ) {
+	            $import = false;
+            }
 	        $body = wp_remote_retrieve_body($response);
 	        $data = json_decode($body, true);
 	        $header = wp_remote_retrieve_headers( $response );
@@ -474,6 +500,7 @@ EOF;
 				        // Taxonomien dazu speichern.
                         foreach ( $remote_item_data['material_altersstufe']  as $tax ) {
                             wp_set_post_terms( $materialid, $tax[ 'name' ], 'altersstufe');
+	                        error_log( ' alter  :' . $tax[ 'name' ] );
                         }
 				        foreach ( $remote_item_data['material_medientyp']  as $tax ) {
 					        $term = term_exists( $tax[ 'name' ], 'medientyp' );
@@ -495,7 +522,9 @@ EOF;
 			        $count++;
 		        }
                 $page++;
-	        }
+	        } else {
+	            $import = false;
+            }
         }
 	}
 
@@ -554,7 +583,7 @@ EOF;
 		$response = wp_remote_get($url, $args );
 		if (is_wp_error($response) || !isset($response['body'])) {
 			error_log( ' getRemoteMaterial ' . $response->get_error_message() );
-		    return;
+		    return false;
 		} // bad response
 		$body = wp_remote_retrieve_body($response);
 		if (is_wp_error($body)) return; // bad body
@@ -578,7 +607,11 @@ EOF;
 		$url = get_option( 'mympool-urls' );
 		self::importMedientyp();
 		self::importBildungsstufen();
-		self::importMaterial( $url );
+		$elements = explode( "\n", $url );
+		foreach ( $elements as $element ) {
+			error_log( ' import : - : ' . $element );
+			self::importMaterial( $element );
+        }
 		wp_die();
 	}
 
