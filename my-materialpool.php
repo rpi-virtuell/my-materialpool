@@ -101,11 +101,13 @@ EOF;
 		}
 
         $taxquery = array();
-        if ( count( $taxArray ) > 1 ) {
-            $taxquery['relation'] = 'AND';
-        }
-        foreach ( $taxArray as $tax ) {
-            $taxquery[] = $tax;
+		if ( isset( $taxArray) && is_array( $taxArray ) ) {
+			if ( count( $taxArray ) > 1 ) {
+				$taxquery['relation'] = 'AND';
+			}
+			foreach ( $taxArray as $tax ) {
+				$taxquery[] = $tax;
+			}
         }
 
 		$search = get_query_var("mp-search");
@@ -172,11 +174,14 @@ EOF;
 			$content .= "Anzahl: " . $anzahl;
 			$content .= "<br>";
 			$content .= "Facetten entfernen: ";
-			foreach ( $taxArray as $tax ) {
+			if ( isset( $taxArray) &&  is_array( $taxArray ) ) {
+				foreach ( $taxArray as $tax ) {
 
-			    if ( is_array( $tax ) ) {
-			        $content .= " <a href='" . self::removeUrl( $_SERVER['REQUEST_URI'] , $tax['taxonomy'], $tax['terms'] ) . "'>". $tax['terms'] . "</a> ";
-                }
+					if ( is_array( $tax ) ) {
+						$content .= " <a href='" . self::removeUrl( $_SERVER['REQUEST_URI'] , $tax['taxonomy'], $tax['terms'] ) . "'>". $tax['terms'] . "</a> ";
+					}
+				}
+
             }
 			while ( $the_query->have_posts() ) {
 			    $template = get_option('mympool-template', self::$template );
@@ -301,10 +306,13 @@ EOF;
                             <p>
                                 Urls: <br>
                                 Alle Materialien - https://material.rpi-virtuell.de/wp-json/wp/v2/material <br>
-                                Material einer Bildungsstufe - https://material.rpi-virtuell.de/wp-json/wp/v2/material/?bildungsstufe={id} <br>
-                                Material eines Medientypes - https://material.rpi-virtuell.de/wp-json/wp/v2/material/?medientyp={id} <br>
-                                Material einer Altersstufe - https://material.rpi-virtuell.de/wp-json/wp/v2/material/?altersstufe={id} <br>
-                                Material eines/r Autor(in) - https://material.rpi-virtuell.de/wp-json/wp/v2/material/?author={id}<br>
+                                Material einer Bildungsstufe - https://material.rpi-virtuell.de/wp-json/mymaterial/v1/material/?bildungsstufe={id} <br>
+                                Material eines Medientypes - https://material.rpi-virtuell.de/wp-json/mymaterial/v1/material/?medientyp={id} <br>
+                                Material einer Altersstufe - https://material.rpi-virtuell.de/wp-json/mymaterial/v1/material/?altersstufe={id} <br><br>
+                                Material eines/r Autor(in) - https://material.rpi-virtuell.de/wp-json/mymaterial/v1/material/?author={slug} <br>
+                                Beispiel: https://material.rpi-virtuell.de/wp-json/mymaterial/v1/material?autor=joerg-lohrer<br><br>
+                                Material einer Einrichtung - https://material.rpi-virtuell.de/wp-json/mymaterial/v1/material/?einrichtung={slug} <br>
+                                Beispiel: https://material.rpi-virtuell.de/wp-json/mymaterial/v1/material?einrichtung=forum-erwachsenenbildung<br>
 
                             </p>
                          </td>
@@ -457,7 +465,7 @@ EOF;
 		error_log( 'in importMaterial');
 		global $wpdb;
         $import = true;
-        $max = get_option( 'mympool-max-count', 10 );
+        $max = get_option( 'mympool-max-count', 5 );
         $count = 0;
         $page = 1;
         while ( $import ) {
@@ -480,7 +488,7 @@ EOF;
 			        $post_arr = array(
 				        'post_name'    => $remote_item_data['slug'],
 				        'post_title'   => $remote_item_data['material_titel'],
-				        'post_content' => $remote_item_data['material_beschreibung'],
+				        'post_content' => $remote_item_data['material_beschreibung']. ' ',
 				        'post_status'  => 'publish',
 				        'post_author'  => get_current_user_id(),
 				        'post_type'    => 'material',
