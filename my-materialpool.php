@@ -306,14 +306,17 @@ EOF;
                             <p>
                                 Urls: <br>
                                 Alle Materialien - https://material.rpi-virtuell.de/wp-json/wp/v2/material <br>
-                                Material einer Bildungsstufe - https://material.rpi-virtuell.de/wp-json/mymaterial/v1/material/?bildungsstufe={id} <br>
-                                Material eines Medientypes - https://material.rpi-virtuell.de/wp-json/mymaterial/v1/material/?medientyp={id} <br>
-                                Material einer Altersstufe - https://material.rpi-virtuell.de/wp-json/mymaterial/v1/material/?altersstufe={id} <br><br>
+                                Material einer Bildungsstufe - https://material.rpi-virtuell.de/wp-json/mymaterial/v1/material/?bildungsstufe={slug} <br>
+                                Beispiel: https://material.rpi-virtuell.de/wp-json/mymaterial/v1/material?bildungsstufe=youth<br><br>
+                                Material eines Medientypes - https://material.rpi-virtuell.de/wp-json/mymaterial/v1/material/?medientyp={slug} <br>
+                                Beispiel: https://material.rpi-virtuell.de/wp-json/mymaterial/v1/material?medientyp=video<br><br>
+                                Material einer Altersstufe - https://material.rpi-virtuell.de/wp-json/mymaterial/v1/material/?altersstufe={slug} <br>
+                                Beispiel: https://material.rpi-virtuell.de/wp-json/mymaterial/v1/material?altersstufe=18-99<br><br>
                                 Material eines/r Autor(in) - https://material.rpi-virtuell.de/wp-json/mymaterial/v1/material/?author={slug} <br>
                                 Beispiel: https://material.rpi-virtuell.de/wp-json/mymaterial/v1/material?autor=joerg-lohrer<br><br>
                                 Material einer Einrichtung - https://material.rpi-virtuell.de/wp-json/mymaterial/v1/material/?einrichtung={slug} <br>
-                                Beispiel: https://material.rpi-virtuell.de/wp-json/mymaterial/v1/material?einrichtung=forum-erwachsenenbildung<br>
-
+                                Beispiel: https://material.rpi-virtuell.de/wp-json/mymaterial/v1/material?einrichtung=forum-erwachsenenbildung<br><br>
+ 
                             </p>
                          </td>
                     </tr>
