@@ -204,14 +204,11 @@ EOF;
     }
 
     public static function removeUrl ( $url, $tax, $slug ) {
-
         $url = preg_replace ( '/\/page\/.*\//','',  $url );
-
 	    $url = preg_replace ( '/mpoolfacet_'.$tax.'%5B.*%5D='. $slug.'/','',  $url );
 	    $url = preg_replace ( '/mpoolfacet_'.$tax.'%5B%5D='. $slug.'/','',  $url );
 	    $url = preg_replace ( '/\&\&/','&',  $url );
 	    $url = preg_replace ( '/\?\&/','?',  $url );
-
         return $url;
     }
 
@@ -316,7 +313,8 @@ EOF;
                                 Beispiel: https://material.rpi-virtuell.de/wp-json/mymaterial/v1/material?autor=joerg-lohrer<br><br>
                                 Material einer Einrichtung - https://material.rpi-virtuell.de/wp-json/mymaterial/v1/material/?einrichtung={slug} <br>
                                 Beispiel: https://material.rpi-virtuell.de/wp-json/mymaterial/v1/material?einrichtung=forum-erwachsenenbildung<br><br>
- 
+                                Inklusives Naterial - https://material.rpi-virtuell.de/wp-json/mymaterial/v1/material?inklusion=inclusive<br>
+
                             </p>
                          </td>
                     </tr>
@@ -333,6 +331,12 @@ EOF;
                         <td><textarea name="mympool-template" class="large-text code" rows="8" ><?php echo esc_attr( get_option('mympool-template', self::$template ) ); ?></textarea>
                         <p>
                             Folgende Macros sind möglich: {material_title}, {material_url}, {material_kurzbeschreibung}, {material_beschreibung}
+
+                            <br><br><br>
+                            <h2>Sgortcodes</h2>
+                            [mymaterialpool] stellt facetten und Suchergebnisliste da.<br>
+                            [mymaterialpool view="result"] stellt Suchergebnisliste da.<br>
+                            
                         </p></td>
                     </tr>
                     <tr valign="top">
