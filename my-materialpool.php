@@ -55,112 +55,125 @@ class MyMaterialpool {
 	}
 
 	public static function shortcode( $atts ) {
+		$atts = array_change_key_case((array)$atts, CASE_LOWER);
+		$scatts = shortcode_atts([
+			'view' => '',
+		], $atts );
+
         global $paged;
         global $the_query;
 		global $wp;
-		$content = <<<EOF
-<div>
-    <div style="float:left; width: 28%">
-        Facetten
-EOF;
 
-   		if (!$paged){ $paged = 1;}
+		if ( ! $paged ) {
+			$paged = 1;
+		}
 
 		$bildungsstufeArray = array();
-		$bildungsstufen = get_query_var("mpoolfacet_bildungsstufe");
+		$bildungsstufen     = get_query_var( "mpoolfacet_bildungsstufe" );
 		if ( is_array( $bildungsstufen ) ) {
-		    foreach ( $bildungsstufen as $bildungsstufe ) {
-		        $taxArray[] = array(
-		                'taxonomy' => 'bildungsstufe',
-                    'field' => 'slug',
-                    'terms' => $bildungsstufe,
-                );
-            }
-        }
+			foreach ( $bildungsstufen as $bildungsstufe ) {
+				$taxArray[] = array(
+					'taxonomy' => 'bildungsstufe',
+					'field'    => 'slug',
+					'terms'    => $bildungsstufe,
+				);
+			}
+		}
 		$medientypeArray = array();
-		$medientypen = get_query_var("mpoolfacet_medientyp");
+		$medientypen     = get_query_var( "mpoolfacet_medientyp" );
 		if ( is_array( $medientypen ) ) {
 			foreach ( $medientypen as $medientype ) {
 				$taxArray[] = array(
 					'taxonomy' => 'medientyp',
-					'field' => 'slug',
-					'terms' => $medientype,
+					'field'    => 'slug',
+					'terms'    => $medientype,
 				);
 			}
 		}
 		$altersstufeArray = array();
-		$altersstufen = get_query_var("mpoolfacet_altersstufe");
+		$altersstufen     = get_query_var( "mpoolfacet_altersstufe" );
 		if ( is_array( $altersstufen ) ) {
 			foreach ( $altersstufen as $altersstufe ) {
 				$taxArray[] = array(
 					'taxonomy' => 'altersstufe',
-					'field' => 'slug',
-					'terms' => $altersstufe,
+					'field'    => 'slug',
+					'terms'    => $altersstufe,
 				);
 			}
 		}
 
-        $taxquery = array();
-		if ( isset( $taxArray) && is_array( $taxArray ) ) {
+		$taxquery = array();
+		if ( isset( $taxArray ) && is_array( $taxArray ) ) {
 			if ( count( $taxArray ) > 1 ) {
 				$taxquery['relation'] = 'AND';
 			}
 			foreach ( $taxArray as $tax ) {
 				$taxquery[] = $tax;
 			}
-        }
+		}
 
-		$search = get_query_var("mp-search");
-        $args = array(
-	        'post_type' => 'material',
-	        'posts_per_page' => -1,
-	        'tax_query' => $taxquery,
-            's' => $search
-        );
-
-		$the_query = new WP_Query( $args );
-		$anzahl = $the_query->post_count;
-		$args = array(
-			'post_type' => 'material',
-			'paged'     => $paged,
-			'posts_per_page' => 10,
-			'tax_query' => $taxquery,
-			's' => $search
+		$search = get_query_var( "mp-search" );
+		$args   = array(
+			'post_type'      => 'material',
+			'posts_per_page' => - 1,
+			'tax_query'      => $taxquery,
+			's'              => $search
 		);
 
 		$the_query = new WP_Query( $args );
+		$anzahl    = $the_query->post_count;
+		$args      = array(
+			'post_type'      => 'material',
+			'paged'          => $paged,
+			'posts_per_page' => 10,
+			'tax_query'      => $taxquery,
+			's'              => $search
+		);
 
-		$taxs = get_taxonomies( array( 'public' => true, 'query_var' => true ),  'objects' );
-		foreach ($taxs as $tax) {
-		    if ( $tax->name != 'medientyp' && $tax->name != 'bildungsstufe' && $tax->name != 'altersstufe' )
-			    continue;
-			if ( !$tax->hierarchical && self::tax_in_query( $tax->name, $the_query ) ) {
-				continue;
-			} else if ( $tax->hierarchical && self::tax_in_query( $tax->name, $the_query ) ) {
-				$termID = term_exists( get_query_var( $tax->query_var ) );
-				$terms = get_terms( $tax->name, array( 'child_of' => $termID ) );
-			} else {
-				$terms = get_terms( $tax->name );
+
+
+		if ( $scatts[ 'view' ]  == '' ) {
+			$content = <<<EOF
+<div>
+    <div style="float:left; width: 28%">
+        Facetten
+EOF;
+
+			$the_query = new WP_Query( $args );
+
+			$taxs = get_taxonomies( array( 'public' => true, 'query_var' => true ), 'objects' );
+			foreach ( $taxs as $tax ) {
+				if ( $tax->name != 'medientyp' && $tax->name != 'bildungsstufe' && $tax->name != 'altersstufe' ) {
+					continue;
+				}
+				if ( ! $tax->hierarchical && self::tax_in_query( $tax->name, $the_query ) ) {
+					continue;
+				} else if ( $tax->hierarchical && self::tax_in_query( $tax->name, $the_query ) ) {
+					$termID = term_exists( get_query_var( $tax->query_var ) );
+					$terms  = get_terms( $tax->name, array( 'child_of' => $termID ) );
+				} else {
+					$terms = get_terms( $tax->name );
+				}
+				if ( sizeof( $terms ) == 0 ) {
+					continue;
+				}
+
+				add_filter( 'term_link', array( 'MyMaterialpool', 'term_link_filter' ), 10, 3 );
+				add_filter( 'get_terms', array( 'MyMaterialpool', 'get_terms_filter' ), 10, 3 );
+				ob_start();
+				wp_list_categories( array(
+					'taxonomy'   => $tax->name,
+					'show_count' => true,
+					'title_li'   => $tax->labels->name,
+				) );
+				$content .= ob_get_contents();
+				ob_clean();
+				remove_filter( 'term_link', array( 'MyMaterialpool', 'term_link_filter' ) );
+				remove_filter( 'get_terms', array( 'MyMaterialpool', 'get_terms_filter' ) );
+
 			}
-			if ( sizeof( $terms ) == 0 )
-				continue;
 
-			add_filter( 'term_link', array( 'MyMaterialpool', 'term_link_filter'), 10, 3 );
-			add_filter( 'get_terms', array( 'MyMaterialpool', 'get_terms_filter'), 10, 3 );
-            ob_start();
-			wp_list_categories( array(
-				'taxonomy' => $tax->name,
-				'show_count' => true,
-				'title_li' => $tax->labels->name,
-			) );
-			$content.= ob_get_contents();
-			ob_clean();
-			remove_filter( 'term_link', array( 'MyMaterialpool', 'term_link_filter' ) );
-			remove_filter( 'get_terms', array( 'MyMaterialpool', 'get_terms_filter') );
-
-		}
-
-		$content .= <<<EOF
+			$content .= <<<EOF
     </div>
     <div  style="float:left; width: 68%">
     <form>
@@ -169,38 +182,129 @@ EOF;
  
 EOF;
 
-		if ( $the_query->have_posts() ) {
-			$content .= self::get_pagination($the_query);
-			$content .= "Anzahl: " . $anzahl;
-			$content .= "<br>";
-			$content .= "Facetten entfernen: ";
-			if ( isset( $taxArray) &&  is_array( $taxArray ) ) {
-				foreach ( $taxArray as $tax ) {
+			if ( $the_query->have_posts() ) {
+				$content .= self::get_pagination( $the_query );
+				$content .= "Anzahl: " . $anzahl;
+				$content .= "<br>";
+				$content .= "Facetten entfernen: ";
+				if ( isset( $taxArray ) && is_array( $taxArray ) ) {
+					foreach ( $taxArray as $tax ) {
 
-					if ( is_array( $tax ) ) {
-						$content .= " <a href='" . self::removeUrl( $_SERVER['REQUEST_URI'] , $tax['taxonomy'], $tax['terms'] ) . "'>". $tax['terms'] . "</a> ";
+						if ( is_array( $tax ) ) {
+							$content .= " <a href='" . self::removeUrl( $_SERVER['REQUEST_URI'], $tax['taxonomy'], $tax['terms'] ) . "'>" . $tax['terms'] . "</a> ";
+						}
 					}
+
 				}
-
-            }
-			while ( $the_query->have_posts() ) {
-			    $template = get_option('mympool-template', self::$template );
-				$the_query->the_post();
-				$template = str_replace( '{material_title}', get_the_title(), $template );
-				$template = str_replace( '{material_url}', get_metadata('post', get_the_ID(), 'material_url', true ), $template );
-				$template = str_replace( '{material_kurzbeschreibung}', get_metadata('post', get_the_ID(), 'material_kurzbeschreibung', true ), $template );
-				$template = str_replace( '{material_beschreibung}', get_metadata('post', get_the_ID(), 'material_beschreibung', true ), $template );
-				$content .= $template;
+				while ( $the_query->have_posts() ) {
+					$template = get_option( 'mympool-template', self::$template );
+					$the_query->the_post();
+					$template = str_replace( '{material_title}', get_the_title(), $template );
+					$template = str_replace( '{material_url}', get_metadata( 'post', get_the_ID(), 'material_url', true ), $template );
+					$template = str_replace( '{material_kurzbeschreibung}', get_metadata( 'post', get_the_ID(), 'material_kurzbeschreibung', true ), $template );
+					$template = str_replace( '{material_beschreibung}', get_metadata( 'post', get_the_ID(), 'material_beschreibung', true ), $template );
+					$content  .= $template;
+				}
+				$content .= self::get_pagination( $the_query );
 			}
-			$content .= self::get_pagination($the_query);
-		}
 
-		$content .= <<<EOF
+			$content .= <<<EOF
     </div>
 </div>
 EOF;
 
-        return $content;
+		}
+		if ( $scatts[ 'view' ]  == 'result' ) {
+
+			$the_query = new WP_Query( $args );
+			$content .= <<<EOF
+ 
+    <div  >
+    <form>
+        <input name="mp-search" id="mp-search" type="text" style="width: 100%;" value="$search" >
+    </form> 
+ 
+EOF;
+
+			if ( $the_query->have_posts() ) {
+				$content .= self::get_pagination( $the_query );
+				$content .= "Anzahl: " . $anzahl;
+				$content .= "<br>";
+				$content .= "Facetten entfernen: ";
+				if ( isset( $taxArray ) && is_array( $taxArray ) ) {
+					foreach ( $taxArray as $tax ) {
+
+						if ( is_array( $tax ) ) {
+							$content .= " <a href='" . self::removeUrl( $_SERVER['REQUEST_URI'], $tax['taxonomy'], $tax['terms'] ) . "'>" . $tax['terms'] . "</a> ";
+						}
+					}
+
+				}
+				while ( $the_query->have_posts() ) {
+					$template = get_option( 'mympool-template', self::$template );
+					$the_query->the_post();
+					$template = str_replace( '{material_title}', get_the_title(), $template );
+					$template = str_replace( '{material_url}', get_metadata( 'post', get_the_ID(), 'material_url', true ), $template );
+					$template = str_replace( '{material_kurzbeschreibung}', get_metadata( 'post', get_the_ID(), 'material_kurzbeschreibung', true ), $template );
+					$template = str_replace( '{material_beschreibung}', get_metadata( 'post', get_the_ID(), 'material_beschreibung', true ), $template );
+					$content  .= $template;
+				}
+				$content .= self::get_pagination( $the_query );
+			}
+
+			$content .= <<<EOF
+    </div>
+ 
+EOF;
+
+		}
+		if ( $scatts[ 'view' ] == facets ) {
+				$content = <<<EOF
+<div>
+        Facetten
+EOF;
+
+				$the_query = new WP_Query( $args );
+
+				$taxs = get_taxonomies( array( 'public' => true, 'query_var' => true ), 'objects' );
+				foreach ( $taxs as $tax ) {
+					if ( $tax->name != 'medientyp' && $tax->name != 'bildungsstufe' && $tax->name != 'altersstufe' ) {
+						continue;
+					}
+					if ( ! $tax->hierarchical && self::tax_in_query( $tax->name, $the_query ) ) {
+						continue;
+					} else if ( $tax->hierarchical && self::tax_in_query( $tax->name, $the_query ) ) {
+						$termID = term_exists( get_query_var( $tax->query_var ) );
+						$terms  = get_terms( $tax->name, array( 'child_of' => $termID ) );
+					} else {
+						$terms = get_terms( $tax->name );
+					}
+					if ( sizeof( $terms ) == 0 ) {
+						continue;
+					}
+
+					add_filter( 'term_link', array( 'MyMaterialpool', 'term_link_filter' ), 10, 3 );
+					add_filter( 'get_terms', array( 'MyMaterialpool', 'get_terms_filter' ), 10, 3 );
+					ob_start();
+					wp_list_categories( array(
+						'taxonomy'   => $tax->name,
+						'show_count' => true,
+						'title_li'   => $tax->labels->name,
+					) );
+					$content .= ob_get_contents();
+					ob_clean();
+					remove_filter( 'term_link', array( 'MyMaterialpool', 'term_link_filter' ) );
+					remove_filter( 'get_terms', array( 'MyMaterialpool', 'get_terms_filter' ) );
+
+				}
+
+				$content .= <<<EOF
+    </div>
+
+EOF;
+        }
+
+		return $content;
     }
 
     public static function removeUrl ( $url, $tax, $slug ) {
@@ -333,10 +437,10 @@ EOF;
                             Folgende Macros sind möglich: {material_title}, {material_url}, {material_kurzbeschreibung}, {material_beschreibung}
 
                             <br><br><br>
-                            <h2>Sgortcodes</h2>
-                            [mymaterialpool] stellt facetten und Suchergebnisliste da.<br>
-                            [mymaterialpool view="result"] stellt Suchergebnisliste da.<br>
-                            
+                            <h2>Shortcodes</h2>
+                            [mymaterialpool] gibt Facetten und Suchergebnisliste aus.<br>
+                            [mymaterialpool view="result"] gibt die Suchergebnisliste aus.<br>
+                            [mymaterialpool view="facet"] gibt die Facetten aus.<br>
                         </p></td>
                     </tr>
                     <tr valign="top">
