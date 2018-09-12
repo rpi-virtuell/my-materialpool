@@ -417,8 +417,9 @@ EOF;
                                 Beispiel: https://material.rpi-virtuell.de/wp-json/mymaterial/v1/material?autor=joerg-lohrer<br><br>
                                 Material einer Einrichtung - https://material.rpi-virtuell.de/wp-json/mymaterial/v1/material/?einrichtung={slug} <br>
                                 Beispiel: https://material.rpi-virtuell.de/wp-json/mymaterial/v1/material?einrichtung=forum-erwachsenenbildung<br><br>
-                                Inklusives Naterial - https://material.rpi-virtuell.de/wp-json/mymaterial/v1/material?inklusion=inclusive<br>
-
+                                Inklusives Naterial - https://material.rpi-virtuell.de/wp-json/mymaterial/v1/material?inklusion=inclusive<br><br>
+                                Material zu einem Schlagwort - https://material.rpi-virtuell.de/wp-json/mymaterial/v1/material/?schlagwort={slug} <br>
+                                Beispiel: https://material.rpi-virtuell.de/wp-json/mymaterial/v1/material?schlagwort=jesus<br><br>
                             </p>
                          </td>
                     </tr>
