@@ -13,7 +13,7 @@
  * Plugin Name:       My Materialpool
  * Plugin URI:        https://github.com/rpi-virtuell/my-materialpool
  * Description:       RPI Virtuell My Materialpool
- * Version:           0.0.2
+ * Version:           0.0.3
  * Author:            Frank Neumann-Staude
  * Author URI:        https://staude.net
  * License:           GNU General Public License v3
@@ -403,7 +403,7 @@ EOF;
                     <tr valign="top">
                         <th scope="row">Quellen</th>
                         <td>
-                            <textarea name="mympool-urls" class="large-text code" rows="8" ><?php echo esc_attr( get_option('mympool-urls', self::$template ) ); ?></textarea>
+                            <textarea name="mympool-urls" class="large-text code" rows="8" ><?php echo esc_attr( get_option('mympool-urls' ) ); ?></textarea>
                             <p>
                                 Urls: <br>
                                 Alle Materialien - https://material.rpi-virtuell.de/wp-json/wp/v2/material <br>
@@ -425,11 +425,11 @@ EOF;
                     </tr>
                     <tr valign="top">
                         <th scope="row">Maximale Anzahl (pro URL)</th>
-                        <td><input type="text" name="mympool-max-count" class=" code" value="<?php echo esc_attr( get_option('mympool-max-count') ); ?>"></td>
+                        <td><input type="text" name="mympool-max-count" class=" code" value="<?php echo esc_attr( get_option('mympool-max-count', 100 ) ); ?>"></td>
                     </tr>
                     <tr valign="top">
                         <th scope="row">Timeout (in Sekunden, default: 5)</th>
-                        <td><input type="text" name="mympool-timeout" class=" code" value="<?php echo esc_attr( get_option('mympool-timeout') ); ?>"></td>
+                        <td><input type="text" name="mympool-timeout" class=" code" value="<?php echo esc_attr( get_option('mympool-timeout', 30 ) ); ?>"></td>
                     </tr>
                     <tr valign="top">
                         <th scope="row">Template</th>
