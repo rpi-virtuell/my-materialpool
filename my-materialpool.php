@@ -183,19 +183,23 @@ EOF;
 EOF;
 
 			if ( $the_query->have_posts() ) {
-				$content .= self::get_pagination( $the_query );
-				$content .= "Anzahl: " . $anzahl;
-				$content .= "<br>";
-				$content .= "Facetten entfernen: ";
 				if ( isset( $taxArray ) && is_array( $taxArray ) ) {
+					$facet = '';
 					foreach ( $taxArray as $tax ) {
 
 						if ( is_array( $tax ) ) {
-							$content .= " <a href='" . self::removeUrl( $_SERVER['REQUEST_URI'], $tax['taxonomy'], $tax['terms'] ) . "'>" . $tax['terms'] . "</a> ";
+							$facet .= " <a href='" . self::removeUrl( $_SERVER['REQUEST_URI'], $tax['taxonomy'], $tax['terms'] ) . "'>" . $tax['terms'] . "</a> ";
 						}
 					}
 
 				}
+				if ( $facet != '' ) {
+					$content .= "Facetten entfernen: " . $facet;
+				}
+				$content .= self::get_pagination( $the_query );
+				$content .= "Anzahl: " . $anzahl;
+				$content .= "<br>";
+ 
 				while ( $the_query->have_posts() ) {
 					$template = get_option( 'mympool-template', self::$template );
 					$the_query->the_post();
@@ -229,19 +233,23 @@ EOF;
 EOF;
 
 			if ( $the_query->have_posts() ) {
-				$content .= self::get_pagination( $the_query );
-				$content .= "Anzahl: " . $anzahl;
-				$content .= "<br>";
-				$content .= "Facetten entfernen: ";
 				if ( isset( $taxArray ) && is_array( $taxArray ) ) {
+				    $facet = '';
 					foreach ( $taxArray as $tax ) {
 
 						if ( is_array( $tax ) ) {
-							$content .= " <a href='" . self::removeUrl( $_SERVER['REQUEST_URI'], $tax['taxonomy'], $tax['terms'] ) . "'>" . $tax['terms'] . "</a> ";
+							$facet .= " <a href='" . self::removeUrl( $_SERVER['REQUEST_URI'], $tax['taxonomy'], $tax['terms'] ) . "'>" . $tax['terms'] . "</a> ";
 						}
 					}
 
 				}
+				if ( $facet != '' ) {
+					$content .= "Facetten entfernen: " . $facet;
+                }
+				$content .= self::get_pagination( $the_query );
+				$content .= "Anzahl: " . $anzahl;
+				$content .= "<br>";
+
 				while ( $the_query->have_posts() ) {
 					$template = get_option( 'mympool-template', self::$template );
 					$the_query->the_post();
