@@ -203,6 +203,8 @@ EOF;
 					$template = str_replace( '{material_url}', get_metadata( 'post', get_the_ID(), 'material_url', true ), $template );
 					$template = str_replace( '{material_kurzbeschreibung}', get_metadata( 'post', get_the_ID(), 'material_kurzbeschreibung', true ), $template );
 					$template = str_replace( '{material_beschreibung}', get_metadata( 'post', get_the_ID(), 'material_beschreibung', true ), $template );
+					$template = str_replace( '{material_screenshot}', '<img src="' . get_metadata( 'post', get_the_ID(), 'material_screenshot', true ) . '" class="mymaterial_cover">', $template );
+
 					$content  .= $template;
 				}
 				$content .= self::get_pagination( $the_query );
@@ -247,6 +249,8 @@ EOF;
 					$template = str_replace( '{material_url}', get_metadata( 'post', get_the_ID(), 'material_url', true ), $template );
 					$template = str_replace( '{material_kurzbeschreibung}', get_metadata( 'post', get_the_ID(), 'material_kurzbeschreibung', true ), $template );
 					$template = str_replace( '{material_beschreibung}', get_metadata( 'post', get_the_ID(), 'material_beschreibung', true ), $template );
+					$template = str_replace( '{material_screenshot}', '<img src="' . get_metadata( 'post', get_the_ID(), 'material_screenshot', true ) . '" class="mymaterial_cover">', $template );
+
 					$content  .= $template;
 				}
 				$content .= self::get_pagination( $the_query );
@@ -326,7 +330,7 @@ EOF;
 
 	public static function term_link_filter( $termlink, $term, $taxonomy ) {
 		$tax = get_taxonomy( $taxonomy );
-		return esc_url(  preg_replace ( '/\/page\/.*\//','',  add_query_arg( ' mpoolfacet_'.$tax->query_var.'[]', $term->slug ) ) ) ;
+		return esc_url(  preg_replace ( '/\/page\/.*\//','',  add_query_arg( 'mpoolfacet_'.$tax->query_var.'[]', $term->slug ) ) ) ;
 	}
 
 	public static  function get_terms_filter( $terms, $taxonomies, $args ) {
@@ -435,7 +439,7 @@ EOF;
                         <th scope="row">Template</th>
                         <td><textarea name="mympool-template" class="large-text code" rows="8" ><?php echo esc_attr( get_option('mympool-template', self::$template ) ); ?></textarea>
                         <p>
-                            Folgende Macros sind möglich: {material_title}, {material_url}, {material_kurzbeschreibung}, {material_beschreibung}
+                            Folgende Macros sind möglich: {material_title}, {material_url}, {material_kurzbeschreibung}, {material_beschreibung}, {material_screenshot}
 
                             <br><br><br>
                             <h2>Shortcodes</h2>
