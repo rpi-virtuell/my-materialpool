@@ -134,8 +134,8 @@ class MyMaterialpool {
 
 		if ( $scatts[ 'view' ]  == '' ) {
 			$content = <<<EOF
-<div>
-    <div style="float:left; width: 28%">
+<div id="mymaterialpool">
+    <div id="mymaterialpoolfaccet"style="float:left; width: 28%">
         Facetten
 EOF;
 
@@ -175,7 +175,7 @@ EOF;
 
 			$content .= <<<EOF
     </div>
-    <div  style="float:left; width: 68%">
+    <div  id="mymaterialpoolresult" style="float:left; width: 68%">
     <form>
         <input name="mp-search" id="mp-search" type="text" placeholder="Suchbegriff" style="width: 100%;" value="$search" >
     </form> 
@@ -199,7 +199,7 @@ EOF;
 				$content .= self::get_pagination( $the_query );
 				$content .= "Anzahl: " . $anzahl;
 				$content .= "<br>";
- 
+
 				while ( $the_query->have_posts() ) {
 					$template = get_option( 'mympool-template', self::$template );
 					$the_query->the_post();
@@ -225,7 +225,7 @@ EOF;
 			$the_query = new WP_Query( $args );
 			$content .= <<<EOF
  
-    <div  >
+    <div  id="mymaterialpoolresult">
     <form>
         <input name="mp-search" id="mp-search" type="text" placeholder="Suchbegriff"  style="width: 100%;" value="$search" >
     </form> 
@@ -272,7 +272,7 @@ EOF;
 		}
 		if ( $scatts[ 'view' ] == facets ) {
 				$content = <<<EOF
-<div>
+<div id="mymaterialpoolfaccet">
         Facetten
 EOF;
 
