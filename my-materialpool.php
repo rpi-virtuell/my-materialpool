@@ -177,7 +177,7 @@ EOF;
     </div>
     <div  style="float:left; width: 68%">
     <form>
-        <input name="mp-search" id="mp-search" type="text" style="width: 100%;" value="$search" >
+        <input name="mp-search" id="mp-search" type="text" placeholder="Suchbegriff" style="width: 100%;" value="$search" >
     </form> 
  
 EOF;
@@ -223,7 +223,7 @@ EOF;
  
     <div  >
     <form>
-        <input name="mp-search" id="mp-search" type="text" style="width: 100%;" value="$search" >
+        <input name="mp-search" id="mp-search" type="text" placeholder="Suchbegriff"  style="width: 100%;" value="$search" >
     </form> 
  
 EOF;
