@@ -143,7 +143,7 @@ EOF;
 
 			$taxs = get_taxonomies( array( 'public' => true, 'query_var' => true ), 'objects' );
 			foreach ( $taxs as $tax ) {
-				if ( $tax->name != 'medientyp' && $tax->name != 'bildungsstufe' && $tax->name != 'altersstufe' ) {
+				if ( $tax->name != 'medientyp' && $tax->name != 'bildungsstufe' && $tax->name != 'altersstufe' && $tax->name != 'materialschlagworte') {
 					continue;
 				}
 				if ( ! $tax->hierarchical && self::tax_in_query( $tax->name, $the_query ) ) {
