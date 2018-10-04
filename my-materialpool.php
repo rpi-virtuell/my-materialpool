@@ -58,6 +58,7 @@ class MyMaterialpool {
 		$atts = array_change_key_case((array)$atts, CASE_LOWER);
 		$scatts = shortcode_atts([
 			'view' => '',
+            'facets' => '',
 		], $atts );
 
         global $paged;
@@ -98,6 +99,18 @@ class MyMaterialpool {
 					'taxonomy' => 'altersstufe',
 					'field'    => 'slug',
 					'terms'    => $altersstufe,
+				);
+			}
+		}
+
+		$materialschlagworteArray = array();
+		$materialschlagworte     = get_query_var( "mpoolfacet_materialschlagworte" );
+		if ( is_array( $materialschlagworte ) ) {
+			foreach ( $materialschlagworte as $materialschlagwort ) {
+				$taxArray[] = array(
+					'taxonomy' => 'materialschlagworte',
+					'field'    => 'slug',
+					'terms'    => $materialschlagwort,
 				);
 			}
 		}
@@ -145,6 +158,18 @@ EOF;
 			foreach ( $taxs as $tax ) {
 				if ( $tax->name != 'medientyp' && $tax->name != 'bildungsstufe' && $tax->name != 'altersstufe' && $tax->name != 'materialschlagworte') {
 					continue;
+				}
+				if ( $scatts[ 'facets' ]  != '' ) {
+				    $facetArray = explode( ',', $scatts[ 'facets' ]  );
+					foreach ( $facetArray as $key => $item ) {
+					    if ( trim( $item )  == 'schlagwort' ) {
+					        $item = "materialschlagworte";
+                        }
+                        $facetArray[ $key ] = trim ( $item );
+				    }
+				    if ( ! in_array( $tax->name, $facetArray ) ) {
+				        continue;
+				    }
 				}
 				if ( ! $tax->hierarchical && self::tax_in_query( $tax->name, $the_query ) ) {
 					continue;
@@ -196,6 +221,7 @@ EOF;
 				if ( $facet != '' ) {
 					$content .= "Facetten entfernen: " . $facet;
 				}
+				$content .= "<br>";
 				$content .= self::get_pagination( $the_query );
 				$content .= "Anzahl: " . $anzahl;
 				$content .= "<br>";
@@ -248,6 +274,7 @@ EOF;
 				if ( $facet != '' ) {
 					$content .= "Facetten entfernen: " . $facet;
                 }
+				$content .= "<br>";
 				$content .= self::get_pagination( $the_query );
 				$content .= "Anzahl: " . $anzahl;
 				$content .= "<br>";
@@ -283,8 +310,20 @@ EOF;
 
 				$taxs = get_taxonomies( array( 'public' => true, 'query_var' => true ), 'objects' );
 				foreach ( $taxs as $tax ) {
-					if ( $tax->name != 'medientyp' && $tax->name != 'bildungsstufe' && $tax->name != 'altersstufe' ) {
+					if ( $tax->name != 'medientyp' && $tax->name != 'bildungsstufe' && $tax->name != 'altersstufe' && $tax->name != 'materialschlagworte') {
 						continue;
+					}
+					if ( $scatts[ 'facets' ]  != '' ) {
+						$facetArray = explode( ',', $scatts[ 'facets' ]  );
+						foreach ( $facetArray as $key => $item ) {
+							if ( trim( $item )  == 'schlagwort' ) {
+								$item = "materialschlagworte";
+							}
+							$facetArray[ $key ] = trim ( $item );
+						}
+						if ( ! in_array( $tax->name, $facetArray ) ) {
+							continue;
+						}
 					}
 					if ( ! $tax->hierarchical && self::tax_in_query( $tax->name, $the_query ) ) {
 						continue;
@@ -335,6 +374,7 @@ EOF;
 		$vars[] = "mpoolfacet_bildungsstufe";
 		$vars[] = "mpoolfacet_altersstufe";
 		$vars[] = "mpoolfacet_medientyp";
+		$vars[] = "mpoolfacet_materialschlagworte";
 		$vars[] = "mp-search";
 		return $vars;
 	}
@@ -458,6 +498,9 @@ EOF;
                             [mymaterialpool] gibt Facetten und Suchergebnisliste aus.<br>
                             [mymaterialpool view="result"] gibt die Suchergebnisliste aus.<br>
                             [mymaterialpool view="facet"] gibt die Facetten aus.<br>
+                            [mymaterialpool facets="bildungsstufe"] Beschränkt die Facetten auf die Facette Bildungsstufe.<br>
+                            [mymaterialpool facets="bildungsstufe, altersstufe"] Beschränkt die Facetten auf die Facetten Bildungsstufe und Alterstufe.<br>
+                            Mögliche Facetten: altersstufe, bildungsstufe, medientyp, schlagwort<br>
                         </p></td>
                     </tr>
                     <tr valign="top">
