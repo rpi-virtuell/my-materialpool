@@ -208,6 +208,8 @@ EOF;
 					$template = str_replace( '{material_kurzbeschreibung}', get_metadata( 'post', get_the_ID(), 'material_kurzbeschreibung', true ), $template );
 					$template = str_replace( '{material_beschreibung}', get_metadata( 'post', get_the_ID(), 'material_beschreibung', true ), $template );
 					$template = str_replace( '{material_screenshot}', '<img src="' . get_metadata( 'post', get_the_ID(), 'material_screenshot', true ) . '" class="mymaterial_cover">', $template );
+					$template = str_replace( '{material_schlagworte}', self::get_schlagworte( get_the_ID() ), $template );
+
 
 					$content  .= $template;
 				}
@@ -258,6 +260,7 @@ EOF;
 					$template = str_replace( '{material_kurzbeschreibung}', get_metadata( 'post', get_the_ID(), 'material_kurzbeschreibung', true ), $template );
 					$template = str_replace( '{material_beschreibung}', get_metadata( 'post', get_the_ID(), 'material_beschreibung', true ), $template );
 					$template = str_replace( '{material_screenshot}', '<img src="' . get_metadata( 'post', get_the_ID(), 'material_screenshot', true ) . '" class="mymaterial_cover">', $template );
+					$template = str_replace( '{material_schlagworte}', self::get_schlagworte( get_the_ID() ), $template );
 
 					$content  .= $template;
 				}
@@ -836,6 +839,24 @@ EOF;
             return $ret;
 		}
 	}
+
+	public function get_schlagworte( $materialID ) {
+		$keywords = wp_get_object_terms ( $materialID, 'materialschlagworte' );
+		$back = '';
+		if ( !empty( $keywords ) ) {
+			if ( ! is_wp_error( $keywords ) ) {
+			    $count = 0;
+				foreach( $keywords as $term ) {
+					if ( $count > 0 ) {
+						$back .= ', ';
+					}
+				    $back .= $term->name;
+                    $count++;
+				}
+			}
+        }
+        return $back;
+    }
 
 }
 
