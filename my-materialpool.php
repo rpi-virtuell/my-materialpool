@@ -383,6 +383,7 @@ EOF;
 	    self::registerTaxonomyBildungsstufe();
 	    self::registerTaxonomyMedientyp();
 	    self::registerTaxonomyAltersstufe();
+	    self::registerTaxonomyMaterialschlagworte();
     }
 
     public static function addSettingsMenu() {
@@ -447,7 +448,7 @@ EOF;
                         <th scope="row">Template</th>
                         <td><textarea name="mympool-template" class="large-text code" rows="8" ><?php echo esc_attr( get_option('mympool-template', self::$template ) ); ?></textarea>
                         <p>
-                            Folgende Macros sind möglich: {material_title}, {material_url}, {material_kurzbeschreibung}, {material_beschreibung}, {material_screenshot}
+                            Folgende Macros sind möglich: {material_title}, {material_url}, {material_kurzbeschreibung}, {material_beschreibung}, {material_screenshot}, {material_schlagworte}
 
                             <br><br><br>
                             <h2>Shortcodes</h2>
@@ -463,6 +464,7 @@ EOF;
                             Bildungsstufen: <?php echo self::countBildungsstufen(); ?><br>
                             Medientypen: <?php echo self::countMedientypen(); ?><br>
                             Altersstufen: <?php echo self::countAltersstufen(); ?><br>
+                            Schlagworte: <?php echo self::countSchlagworte(); ?><br>
                         </td>
                     </tr>
                 </table>
@@ -497,6 +499,10 @@ EOF;
 
 	public static function countAltersstufen() {
 		return wp_count_terms( 'altersstufe' );
+	}
+
+	public static function countSchlagworte() {
+		return wp_count_terms( 'materialschlagworte' );
 	}
 
     public static function importMedientyp() {
@@ -628,26 +634,29 @@ EOF;
 			        $id = $wpdb->get_var( $wpdb->prepare( "SELECT ID FROM " . $wpdb->posts . " WHERE post_name = '%s' AND  post_type = 'material'  ", $remote_item_data['slug'] ) );
 			        if ( empty( $id ) ) {
 				        $materialid = wp_insert_post( $post_arr );
-				        error_log( ' importing post :' . $remote_item_data['slug'] );
 				        // Taxonomien dazu speichern.
                         foreach ( $remote_item_data['material_altersstufe']  as $tax ) {
                             wp_set_post_terms( $materialid, $tax[ 'name' ], 'altersstufe');
-	                        error_log( ' alter  :' . $tax[ 'name' ] );
                         }
 				        foreach ( $remote_item_data['material_medientyp']  as $tax ) {
 					        $term = term_exists( $tax[ 'name' ], 'medientyp' );
 					        if ( 0 !== $term && null !== $term ) {
 						        wp_set_post_terms( $materialid, $term[ 'term_id'], 'medientyp');
-						        error_log( ' medien  :' . $term[ 'term_id'] );
 					        }
 				        }
 				        foreach ( $remote_item_data['material_bildungsstufe']  as $tax ) {
 					        $term = term_exists( $tax[ 'name' ], 'bildungsstufe' );
 					        if ( 0 !== $term && null !== $term ) {
-						        error_log( ' bildung  :' . $term[ 'term_id'] );
 						        wp_set_post_terms( $materialid, $term[ 'term_id'], 'bildungsstufe');
 					        }
 				        }
+				        var_dump ( "Material: ". $materialid );
+				        // Schlagworte hinzufügen
+				        foreach ( $remote_item_data['material_schlagworte']  as $tax ) {
+					        wp_set_post_terms( $materialid, $tax, 'materialschlagworte', true );
+
+				        }
+
 			        } else {
 				        error_log( ' ignoring post :' . $remote_item_data['slug'] );
 			        }
@@ -706,6 +715,17 @@ EOF;
 		);
 	}
 
+	public static function registerTaxonomyMaterialschlagworte() {
+		register_taxonomy(
+			'materialschlagworte',
+			'material',
+			array(
+				'label' => __( 'Schlagworte' ),
+				'rewrite' => array( 'slug' => 'materialschlagworte' ),
+			)
+		);
+	}
+
 	public static function getRemoteMaterial( $url ) {
 		error_log( ' getRemoteMaterial :' . $url );
 		$timeout = get_option( 'mympool-timeout', 5 );
@@ -730,8 +750,9 @@ EOF;
 		self::deleteTerms( 'bildungsstufe' );
 		self::deleteTerms( 'medientyp' );
 		self::deleteTerms( 'altersstufe' );
+		self::deleteTerms( 'materialschlagworte' );
 		self::deletePosts( 'material' );
-		wp_die();
+				wp_die();
 	}
 
 	public static function callbackImportAll() {
