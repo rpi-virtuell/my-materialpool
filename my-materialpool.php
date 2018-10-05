@@ -13,7 +13,7 @@
  * Plugin Name:       My Materialpool
  * Plugin URI:        https://github.com/rpi-virtuell/my-materialpool
  * Description:       RPI Virtuell My Materialpool
- * Version:           0.0.4
+ * Version:           0.0.5
  * Author:            Frank Neumann-Staude
  * Author URI:        https://staude.net
  * License:           GNU General Public License v3
@@ -59,6 +59,10 @@ class MyMaterialpool {
 		$scatts = shortcode_atts([
 			'view' => '',
             'facets' => '',
+            'schlagwortfilter' => '',
+            'medientypfilter' => '',
+            'altersstufefilter' => '',
+            'bildungsstufefilter' => '',
 		], $atts );
 
         global $paged;
@@ -68,6 +72,57 @@ class MyMaterialpool {
 		if ( ! $paged ) {
 			$paged = 1;
 		}
+
+		if ( $scatts[ 'schlagwortfilter' ]  != '' ) {
+			$schlagwortfilterArray = explode( ',', $scatts[ 'schlagwortfilter' ]  );
+			foreach ( $schlagwortfilterArray as $key => $item ) {
+				$taxArray2[] = array(
+					'taxonomy' => 'materialschlagworte',
+					'field'    => 'slug',
+					'terms'    => trim ( $item ),
+				);
+			}
+		}
+
+		if ( $scatts[ 'medientypfilter' ]  != '' ) {
+			$medientypfilterArray = explode( ',', $scatts[ 'medientypfilter' ]  );
+			foreach ( $medientypfilterArray as $key => $item ) {
+				$taxArray2[] = array(
+					'taxonomy' => 'medientyp',
+					'field'    => 'slug',
+					'terms'    => trim ( $item ),
+				);
+			}
+		}
+
+
+		if ( $scatts[ 'altersstufefilter' ]  != '' ) {
+			$altersstufefilterArray = explode( ',', $scatts[ 'altersstufefilter' ]  );
+			foreach ( $altersstufefilterArray as $key => $item ) {
+				$taxArray2[] = array(
+					'taxonomy' => 'altersstufe',
+					'field'    => 'slug',
+					'terms'    => trim ( $item ),
+				);
+			}
+		}
+
+		if ( $scatts[ 'bildungsstufefilter' ]  != '' ) {
+			$bildungsstufefilterArray = explode( ',', $scatts[ 'bildungsstufefilter' ]  );
+			foreach ( $bildungsstufefilterArray as $key => $item ) {
+				$taxArray2[] = array(
+					'taxonomy' => 'bildungsstufe',
+					'field'    => 'slug',
+					'terms'    => trim ( $item ),
+				);
+			}
+		}
+
+
+
+
+
+
 
 		$bildungsstufeArray = array();
 		$bildungsstufen     = get_query_var( "mpoolfacet_bildungsstufe" );
@@ -80,6 +135,7 @@ class MyMaterialpool {
 				);
 			}
 		}
+
 		$medientypeArray = array();
 		$medientypen     = get_query_var( "mpoolfacet_medientyp" );
 		if ( is_array( $medientypen ) ) {
@@ -121,6 +177,14 @@ class MyMaterialpool {
 				$taxquery['relation'] = 'AND';
 			}
 			foreach ( $taxArray as $tax ) {
+				$taxquery[] = $tax;
+			}
+		}
+		if ( isset( $taxArray2 ) && is_array( $taxArray2 ) ) {
+			if ( empty( $taxquery )   ) {
+				$taxquery['relation'] = 'AND';
+			}
+			foreach ( $taxArray2 as $tax ) {
 				$taxquery[] = $tax;
 			}
 		}
@@ -501,6 +565,10 @@ EOF;
                             [mymaterialpool facets="bildungsstufe"] Beschränkt die Facetten auf die Facette Bildungsstufe.<br>
                             [mymaterialpool facets="bildungsstufe, altersstufe"] Beschränkt die Facetten auf die Facetten Bildungsstufe und Alterstufe.<br>
                             Mögliche Facetten: altersstufe, bildungsstufe, medientyp, schlagwort<br>
+                            [mymaterialpool bildungsstufefilter="schulstufen"] Filtert die zur Verfügung Materialien. Mögliche Filter sind  altersstufefilter, bildungsstufefilter, medientypfilter und schlagwortfilter.<br>
+                            [mymaterialpool bildungsstufefilter="schulstufen" medientypfilter="praxishilfen"] Filtert auf Materialen der Bildungsstufen Schulstufen UND des Medientyps Praxishilfen<br>
+                            [mymaterialpool schlagwortfilter="App,E-learning"] Filter auf Materialien mit den Schlagworten App UND E-Learnung.<br>
+
                         </p></td>
                     </tr>
                     <tr valign="top">
