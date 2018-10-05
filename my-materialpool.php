@@ -13,7 +13,7 @@
  * Plugin Name:       My Materialpool
  * Plugin URI:        https://github.com/rpi-virtuell/my-materialpool
  * Description:       RPI Virtuell My Materialpool
- * Version:           0.0.5
+ * Version:           0.0.6
  * Author:            Frank Neumann-Staude
  * Author URI:        https://staude.net
  * License:           GNU General Public License v3
@@ -37,6 +37,42 @@ class MyMaterialpool {
 </div>
 ";
 
+	public static $template_view = '<div id="mymaterialpool">
+    <div id="mymaterialpoolfaccet"style="float:left; width: 28%;">
+        Facetten
+{facetlist}
+    </div>
+    <div  id="mymaterialpoolresult" style="float:left; width: 68%;">
+    <form>
+        <input name="mp-search" id="mp-search" type="text" placeholder="Suchbegriff" style="width: 100%;" value="{searchquery}" >
+    </form> 
+    {removefacets}
+    {pagination}
+    {anzahl} 
+    <br>
+    {results}
+    </div>
+</div>
+';
+
+	public static $template_viewfacet = '<div id="mymaterialpoolfaccet">
+        Facetten
+{facetlist}
+</div>
+';
+
+	public static $template_viewresult = '<div  id="mymaterialpoolresult" >
+    <form>
+        <input name="mp-search" id="mp-search" type="text" placeholder="Suchbegriff" style="width: 100%;" value="{searchquery}" >
+    </form> 
+    {removefacets}
+    {pagination}
+    {anzahl} 
+    <br>
+    {results}
+    </div>
+ 
+';
     public  function __construct() {
 		self::$plugin_url = plugin_dir_url( __FILE__ );
 
@@ -117,12 +153,6 @@ class MyMaterialpool {
 				);
 			}
 		}
-
-
-
-
-
-
 
 		$bildungsstufeArray = array();
 		$bildungsstufen     = get_query_var( "mpoolfacet_bildungsstufe" );
@@ -210,14 +240,11 @@ class MyMaterialpool {
 
 
 		if ( $scatts[ 'view' ]  == '' ) {
-			$content = <<<EOF
-<div id="mymaterialpool">
-    <div id="mymaterialpoolfaccet"style="float:left; width: 28%">
-        Facetten
-EOF;
+            $content = '';
+			$template = get_option('mympool-templateview', self::$template_view  );
+
 
 			$the_query = new WP_Query( $args );
-
 			$taxs = get_taxonomies( array( 'public' => true, 'query_var' => true ), 'objects' );
 			foreach ( $taxs as $tax ) {
 				if ( $tax->name != 'medientyp' && $tax->name != 'bildungsstufe' && $tax->name != 'altersstufe' && $tax->name != 'materialschlagworte') {
@@ -259,17 +286,9 @@ EOF;
 				ob_clean();
 				remove_filter( 'term_link', array( 'MyMaterialpool', 'term_link_filter' ) );
 				remove_filter( 'get_terms', array( 'MyMaterialpool', 'get_terms_filter' ) );
-
 			}
-
-			$content .= <<<EOF
-    </div>
-    <div  id="mymaterialpoolresult" style="float:left; width: 68%">
-    <form>
-        <input name="mp-search" id="mp-search" type="text" placeholder="Suchbegriff" style="width: 100%;" value="$search" >
-    </form> 
- 
-EOF;
+			$template = str_replace( '{facetlist}', $content, $template ); $content = '';
+			$template = str_replace( '{searchquery}', $search, $template );
 
 			if ( $the_query->have_posts() ) {
 				if ( isset( $taxArray ) && is_array( $taxArray ) ) {
@@ -280,95 +299,75 @@ EOF;
 							$facet .= " <a href='" . self::removeUrl( $_SERVER['REQUEST_URI'], $tax['taxonomy'], $tax['terms'] ) . "'>" . $tax['terms'] . "</a> ";
 						}
 					}
-
 				}
 				if ( $facet != '' ) {
-					$content .= "Facetten entfernen: " . $facet;
+					$content .= "Facetten entfernen: " . $facet . "<br>";
 				}
-				$content .= "<br>";
-				$content .= self::get_pagination( $the_query );
-				$content .= "Anzahl: " . $anzahl;
-				$content .= "<br>";
+				$template = str_replace( '{removefacets}', $content, $template );$content = '';
+				$template = str_replace( '{pagination}', self::get_pagination( $the_query ), $template );$content = '';
+				$template = str_replace( '{anzahl}', "Anzahl: " . $anzahl, $template );$content = '';
 
 				while ( $the_query->have_posts() ) {
-					$template = get_option( 'mympool-template', self::$template );
+					$template2 = get_option( 'mympool-template', self::$template );
 					$the_query->the_post();
-					$template = str_replace( '{material_title}', get_the_title(), $template );
-					$template = str_replace( '{material_url}', get_metadata( 'post', get_the_ID(), 'material_url', true ), $template );
-					$template = str_replace( '{material_kurzbeschreibung}', get_metadata( 'post', get_the_ID(), 'material_kurzbeschreibung', true ), $template );
-					$template = str_replace( '{material_beschreibung}', get_metadata( 'post', get_the_ID(), 'material_beschreibung', true ), $template );
-					$template = str_replace( '{material_screenshot}', '<img src="' . get_metadata( 'post', get_the_ID(), 'material_screenshot', true ) . '" class="mymaterial_cover">', $template );
-					$template = str_replace( '{material_schlagworte}', self::get_schlagworte( get_the_ID() ), $template );
+					$template2 = str_replace( '{material_title}', get_the_title(), $template2 );
+					$template2 = str_replace( '{material_url}', get_metadata( 'post', get_the_ID(), 'material_url', true ), $template2 );
+					$template2 = str_replace( '{material_kurzbeschreibung}', get_metadata( 'post', get_the_ID(), 'material_kurzbeschreibung', true ), $template2 );
+					$template2 = str_replace( '{material_beschreibung}', get_metadata( 'post', get_the_ID(), 'material_beschreibung', true ), $template2 );
+					$template2 = str_replace( '{material_screenshot}', '<img src="' . get_metadata( 'post', get_the_ID(), 'material_screenshot', true ) . '" class="mymaterial_cover">', $template2 );
+					$template2 = str_replace( '{material_schlagworte}', self::get_schlagworte( get_the_ID() ), $template2 );
 
-
-					$content  .= $template;
+					$content  .= $template2;
 				}
-				$content .= self::get_pagination( $the_query );
+				$template = str_replace( '{results}', $content, $template );$content = '';
 			}
-
-			$content .= <<<EOF
-    </div>
-</div>
-EOF;
-
+            $content = $template;
 		}
 		if ( $scatts[ 'view' ]  == 'result' ) {
+			$content = '';
+			$template = get_option('mympool-templateviewresult', self::$template_view  );
 
 			$the_query = new WP_Query( $args );
-			$content .= <<<EOF
- 
-    <div  id="mymaterialpoolresult">
-    <form>
-        <input name="mp-search" id="mp-search" type="text" placeholder="Suchbegriff"  style="width: 100%;" value="$search" >
-    </form> 
- 
-EOF;
+			$template = str_replace( '{searchquery}', $search, $template );
 
 			if ( $the_query->have_posts() ) {
 				if ( isset( $taxArray ) && is_array( $taxArray ) ) {
-				    $facet = '';
+					$facet = '';
 					foreach ( $taxArray as $tax ) {
 
 						if ( is_array( $tax ) ) {
 							$facet .= " <a href='" . self::removeUrl( $_SERVER['REQUEST_URI'], $tax['taxonomy'], $tax['terms'] ) . "'>" . $tax['terms'] . "</a> ";
 						}
 					}
-
 				}
 				if ( $facet != '' ) {
-					$content .= "Facetten entfernen: " . $facet;
-                }
-				$content .= "<br>";
-				$content .= self::get_pagination( $the_query );
-				$content .= "Anzahl: " . $anzahl;
-				$content .= "<br>";
+					$content .= "Facetten entfernen: " . $facet . "<br>";
+				}
+				$template = str_replace( '{removefacets}', $content, $template );$content = '';
+				$template = str_replace( '{pagination}', self::get_pagination( $the_query ), $template );$content = '';
+				$template = str_replace( '{anzahl}', "Anzahl: " . $anzahl, $template );$content = '';
 
 				while ( $the_query->have_posts() ) {
-					$template = get_option( 'mympool-template', self::$template );
+					$template2 = get_option( 'mympool-template', self::$template );
 					$the_query->the_post();
-					$template = str_replace( '{material_title}', get_the_title(), $template );
-					$template = str_replace( '{material_url}', get_metadata( 'post', get_the_ID(), 'material_url', true ), $template );
-					$template = str_replace( '{material_kurzbeschreibung}', get_metadata( 'post', get_the_ID(), 'material_kurzbeschreibung', true ), $template );
-					$template = str_replace( '{material_beschreibung}', get_metadata( 'post', get_the_ID(), 'material_beschreibung', true ), $template );
-					$template = str_replace( '{material_screenshot}', '<img src="' . get_metadata( 'post', get_the_ID(), 'material_screenshot', true ) . '" class="mymaterial_cover">', $template );
-					$template = str_replace( '{material_schlagworte}', self::get_schlagworte( get_the_ID() ), $template );
+					$template2 = str_replace( '{material_title}', get_the_title(), $template2 );
+					$template2 = str_replace( '{material_url}', get_metadata( 'post', get_the_ID(), 'material_url', true ), $template2 );
+					$template2 = str_replace( '{material_kurzbeschreibung}', get_metadata( 'post', get_the_ID(), 'material_kurzbeschreibung', true ), $template2 );
+					$template2 = str_replace( '{material_beschreibung}', get_metadata( 'post', get_the_ID(), 'material_beschreibung', true ), $template2 );
+					$template2 = str_replace( '{material_screenshot}', '<img src="' . get_metadata( 'post', get_the_ID(), 'material_screenshot', true ) . '" class="mymaterial_cover">', $template2 );
+					$template2 = str_replace( '{material_schlagworte}', self::get_schlagworte( get_the_ID() ), $template2 );
 
-					$content  .= $template;
+					$content  .= $template2;
 				}
-				$content .= self::get_pagination( $the_query );
+				$template = str_replace( '{results}', $content, $template );$content = '';
 			}
 
-			$content .= <<<EOF
-    </div>
- 
-EOF;
+			$content = $template;
 
 		}
-		if ( $scatts[ 'view' ] == facets ) {
-				$content = <<<EOF
-<div id="mymaterialpoolfaccet">
-        Facetten
-EOF;
+		if ( $scatts[ 'view' ] == 'facets' ) {
+			$content = '';
+			$template = get_option('mympool-templateviewfacet', self::$template_viewfacet  );
 
 				$the_query = new WP_Query( $args );
 
@@ -416,10 +415,8 @@ EOF;
 
 				}
 
-				$content .= <<<EOF
-    </div>
-
-EOF;
+			$template = str_replace( '{facetlist}', $content, $template );
+			$content = $template;
         }
         wp_reset_query();
 		return $content;
@@ -509,6 +506,9 @@ EOF;
 		register_setting( 'my-materialppool-settings-group', 'mympool-template' );
 		register_setting( 'my-materialppool-settings-group', 'mympool-max-count' );
 		register_setting( 'my-materialppool-settings-group', 'mympool-timeout' );
+		register_setting( 'my-materialppool-settings-group', 'mympool-templateview' );
+		register_setting( 'my-materialppool-settings-group', 'mympool-templateviewfacet' );
+		register_setting( 'my-materialppool-settings-group', 'mympool-templateviewresult' );
 	}
 
 	public static function my_cool_plugin_settings_page() {
@@ -552,13 +552,46 @@ EOF;
                         <td><input type="text" name="mympool-timeout" class=" code" value="<?php echo esc_attr( get_option('mympool-timeout', 30 ) ); ?>"></td>
                     </tr>
                     <tr valign="top">
-                        <th scope="row">Template</th>
+                        <th scope="row">Template eines Ergebnisblocks</th>
                         <td><textarea name="mympool-template" class="large-text code" rows="8" ><?php echo esc_attr( get_option('mympool-template', self::$template ) ); ?></textarea>
                         <p>
                             Folgende Macros sind möglich: {material_title}, {material_url}, {material_kurzbeschreibung}, {material_beschreibung}, {material_screenshot}, {material_schlagworte}
 
-                            <br><br><br>
-                            <h2>Shortcodes</h2>
+
+                        </p></td>
+                    </tr>
+
+                    <tr valign="top">
+                        <th scope="row">Template Ansicht</th>
+                        <td><textarea name="mympool-templateview" class="large-text code" rows="8" ><?php echo esc_attr( get_option('mympool-templateview', self::$template_view ) ); ?></textarea>
+                            <p>
+                                Folgende Macros sind möglich: {facetlist}, {searchquery}, {removefacets}, {pagination}, {anzahl}, {results}
+                           </p>
+                        </td>
+                    </tr>
+
+                    <tr valign="top">
+                        <th scope="row">Template view=facet</th>
+                        <td><textarea name="mympool-templateviewfacet" class="large-text code" rows="8" ><?php echo esc_attr( get_option('mympool-templateviewfacet', self::$template_viewfacet ) ); ?></textarea>
+                            <p>
+                                Folgende Macros sind möglich: {facetlist}
+                            </p>
+                        </td>
+                    </tr>
+
+                    <tr valign="top">
+                        <th scope="row">Template view=result</th>
+                        <td><textarea name="mympool-templateviewresult" class="large-text code" rows="8" ><?php echo esc_attr( get_option('mympool-templateviewresult', self::$template_viewresult ) ); ?></textarea>
+                            <p>
+                                Folgende Macros sind möglich: {searchquery}, {removefacets}, {pagination}, {anzahl}, {results}
+                            </p>
+                        </td>
+                    </tr>
+
+
+                    <tr valign="top">
+                        <th scope="row">Shortcodes</th>
+                        <td><p>
                             [mymaterialpool] gibt Facetten und Suchergebnisliste aus.<br>
                             [mymaterialpool view="result"] gibt die Suchergebnisliste aus.<br>
                             [mymaterialpool view="facet"] gibt die Facetten aus.<br>
@@ -568,9 +601,11 @@ EOF;
                             [mymaterialpool bildungsstufefilter="schulstufen"] Filtert die zur Verfügung Materialien. Mögliche Filter sind  altersstufefilter, bildungsstufefilter, medientypfilter und schlagwortfilter.<br>
                             [mymaterialpool bildungsstufefilter="schulstufen" medientypfilter="praxishilfen"] Filtert auf Materialen der Bildungsstufen Schulstufen UND des Medientyps Praxishilfen<br>
                             [mymaterialpool schlagwortfilter="App,E-learning"] Filter auf Materialien mit den Schlagworten App UND E-Learnung.<br>
-
-                        </p></td>
+                            </p>
+                            </td>
                     </tr>
+
+
                     <tr valign="top">
                         <th scope="row">Statistik</th>
                         <td>
@@ -764,7 +799,6 @@ EOF;
 						        wp_set_post_terms( $materialid, $term[ 'term_id'], 'bildungsstufe');
 					        }
 				        }
-				        var_dump ( "Material: ". $materialid );
 				        // Schlagworte hinzufügen
 				        foreach ( $remote_item_data['material_schlagworte']  as $tax ) {
 					        wp_set_post_terms( $materialid, $tax, 'materialschlagworte', true );
