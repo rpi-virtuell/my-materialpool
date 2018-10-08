@@ -312,6 +312,7 @@ class MyMaterialpool {
 					$the_query->the_post();
 					$template2 = str_replace( '{material_title}', get_the_title(), $template2 );
 					$template2 = str_replace( '{material_url}', get_metadata( 'post', get_the_ID(), 'material_url', true ), $template2 );
+					$template2 = str_replace( '{material_review_url}', get_metadata( 'post', get_the_ID(), 'material_review_url', true ), $template2 );
 					$template2 = str_replace( '{material_kurzbeschreibung}', get_metadata( 'post', get_the_ID(), 'material_kurzbeschreibung', true ), $template2 );
 					$template2 = str_replace( '{material_beschreibung}', get_metadata( 'post', get_the_ID(), 'material_beschreibung', true ), $template2 );
 					$template2 = str_replace( '{material_screenshot}', '<img src="' . get_metadata( 'post', get_the_ID(), 'material_screenshot', true ) . '" class="mymaterial_cover">', $template2 );
@@ -352,6 +353,7 @@ class MyMaterialpool {
 					$the_query->the_post();
 					$template2 = str_replace( '{material_title}', get_the_title(), $template2 );
 					$template2 = str_replace( '{material_url}', get_metadata( 'post', get_the_ID(), 'material_url', true ), $template2 );
+					$template2 = str_replace( '{material_review_url}', get_metadata( 'post', get_the_ID(), 'material_review_url', true ), $template2 );
 					$template2 = str_replace( '{material_kurzbeschreibung}', get_metadata( 'post', get_the_ID(), 'material_kurzbeschreibung', true ), $template2 );
 					$template2 = str_replace( '{material_beschreibung}', get_metadata( 'post', get_the_ID(), 'material_beschreibung', true ), $template2 );
 					$template2 = str_replace( '{material_screenshot}', '<img src="' . get_metadata( 'post', get_the_ID(), 'material_screenshot', true ) . '" class="mymaterial_cover">', $template2 );
@@ -555,7 +557,7 @@ class MyMaterialpool {
                         <th scope="row">Template eines Ergebnisblocks</th>
                         <td><textarea name="mympool-template" class="large-text code" rows="8" ><?php echo esc_attr( get_option('mympool-template', self::$template ) ); ?></textarea>
                         <p>
-                            Folgende Macros sind möglich: {material_title}, {material_url}, {material_kurzbeschreibung}, {material_beschreibung}, {material_screenshot}, {material_schlagworte}
+                            Folgende Macros sind möglich: {material_title}, {material_url}, {material_review_url}, {material_kurzbeschreibung}, {material_beschreibung}, {material_screenshot}, {material_schlagworte}
 
 
                         </p></td>
@@ -773,6 +775,7 @@ class MyMaterialpool {
 				        'post_type'    => 'material',
 				        'meta_input'   => array(
 					        'material_url'              => $remote_item_data['material_url'],
+					        'material_review_url'       => $remote_item_data['material_review_url'],
 					        'material_titel'            => $remote_item_data['material_titel'],
 					        'material_kurzbeschreibung' => $remote_item_data['material_kurzbeschreibung'],
 					        'material_beschreibung'     => $remote_item_data['material_beschreibung'],
