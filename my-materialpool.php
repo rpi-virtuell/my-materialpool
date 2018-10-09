@@ -13,7 +13,7 @@
  * Plugin Name:       My Materialpool
  * Plugin URI:        https://github.com/rpi-virtuell/my-materialpool
  * Description:       RPI Virtuell My Materialpool
- * Version:           0.0.7
+ * Version:           0.0.8
  * Author:            Frank Neumann-Staude
  * Author URI:        https://staude.net
  * License:           GNU General Public License v3
@@ -91,6 +91,7 @@ class MyMaterialpool {
 	}
 
 	public static function shortcode( $atts ) {
+        global $myMaterialpoolKeywordCount;
 		$atts = array_change_key_case((array)$atts, CASE_LOWER);
 		$scatts = shortcode_atts([
 			'view' => '',
@@ -99,8 +100,10 @@ class MyMaterialpool {
             'medientypfilter' => '',
             'altersstufefilter' => '',
             'bildungsstufefilter' => '',
+            'min_schlagwort_treffer' => '',
 		], $atts );
 
+		$myMaterialpoolKeywordCount = $scatts[ 'min_schlagwort_treffer' ];
         global $paged;
         global $the_query;
 		global $wp;
@@ -276,6 +279,9 @@ class MyMaterialpool {
 
 				add_filter( 'term_link', array( 'MyMaterialpool', 'term_link_filter' ), 10, 3 );
 				add_filter( 'get_terms', array( 'MyMaterialpool', 'get_terms_filter' ), 10, 3 );
+				if ( $tax->name == 'materialschlagworte' ) {
+    				add_filter( 'list_cats', array( 'MyMaterialpool', 'modify_list_cats' ), 10, 2 );
+				}
 				ob_start();
 				wp_list_categories( array(
 					'taxonomy'   => $tax->name,
@@ -286,6 +292,9 @@ class MyMaterialpool {
 				ob_clean();
 				remove_filter( 'term_link', array( 'MyMaterialpool', 'term_link_filter' ) );
 				remove_filter( 'get_terms', array( 'MyMaterialpool', 'get_terms_filter' ) );
+				if ( $tax->name == 'materialschlagworte' ) {
+					remove_filter( 'list_cats', array( 'MyMaterialpool', 'modify_list_cats' ));
+				}
 			}
 			$template = str_replace( '{facetlist}', $content, $template ); $content = '';
 			$template = str_replace( '{searchquery}', $search, $template );
@@ -404,6 +413,9 @@ class MyMaterialpool {
 
 					add_filter( 'term_link', array( 'MyMaterialpool', 'term_link_filter' ), 10, 3 );
 					add_filter( 'get_terms', array( 'MyMaterialpool', 'get_terms_filter' ), 10, 3 );
+					if ( $tax->name == 'materialschlagworte' ) {
+						add_filter( 'list_cats', array( 'MyMaterialpool', 'modify_list_cats' ), 10, 2 );
+					}
 					ob_start();
 					wp_list_categories( array(
 						'taxonomy'   => $tax->name,
@@ -414,7 +426,9 @@ class MyMaterialpool {
 					ob_clean();
 					remove_filter( 'term_link', array( 'MyMaterialpool', 'term_link_filter' ) );
 					remove_filter( 'get_terms', array( 'MyMaterialpool', 'get_terms_filter' ) );
-
+					if ( $tax->name == 'materialschlagworte' ) {
+						remove_filter( 'list_cats', array( 'MyMaterialpool', 'modify_list_cats' ) );
+					}
 				}
 
 			$template = str_replace( '{facetlist}', $content, $template );
@@ -603,6 +617,7 @@ class MyMaterialpool {
                             [mymaterialpool bildungsstufefilter="schulstufen"] Filtert die zur Verfügung Materialien. Mögliche Filter sind  altersstufefilter, bildungsstufefilter, medientypfilter und schlagwortfilter.<br>
                             [mymaterialpool bildungsstufefilter="schulstufen" medientypfilter="praxishilfen"] Filtert auf Materialen der Bildungsstufen Schulstufen UND des Medientyps Praxishilfen<br>
                             [mymaterialpool schlagwortfilter="App,E-learning"] Filter auf Materialien mit den Schlagworten App UND E-Learnung.<br>
+                            [mymaterialpool min_schlagwort_treffer=3] Gibt nur noch Schlagworte in der Facette aus, die min x Treffer haben.<br>
                             </p>
                             </td>
                     </tr>
@@ -1006,6 +1021,19 @@ class MyMaterialpool {
         return $back;
     }
 
+    public function modify_list_cats ( $name, $category ) {
+        global $myMaterialpoolKeywordCount;
+
+        if (  $myMaterialpoolKeywordCount == '') {
+	        return $name;
+        } else {
+	        if ( $category->count >= (int) $myMaterialpoolKeywordCount ) {
+		        return $name;
+	        } else {
+		        return '';
+	        }
+        }
+    }
 }
 
 add_action( 'init',array( 'MyMaterialpool', 'init' ) );
