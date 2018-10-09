@@ -13,7 +13,7 @@
  * Plugin Name:       My Materialpool
  * Plugin URI:        https://github.com/rpi-virtuell/my-materialpool
  * Description:       RPI Virtuell My Materialpool
- * Version:           0.0.6
+ * Version:           0.0.7
  * Author:            Frank Neumann-Staude
  * Author URI:        https://staude.net
  * License:           GNU General Public License v3
