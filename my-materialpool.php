@@ -13,7 +13,7 @@
  * Plugin Name:       My Materialpool
  * Plugin URI:        https://github.com/rpi-virtuell/my-materialpool
  * Description:       RPI Virtuell My Materialpool
- * Version:           0.0.8
+ * Version:           0.0.9
  * Author:            Frank Neumann-Staude
  * Author URI:        https://staude.net
  * License:           GNU General Public License v3
@@ -78,6 +78,8 @@ class MyMaterialpool {
 
 	    add_action( 'wp_ajax_mympool_delete_all',  array( 'MyMaterialpool', 'callbackDeleteAll' ) );
 	    add_action( 'wp_ajax_mympool_import_all',  array( 'MyMaterialpool', 'callbackImportAll' ) );
+	    add_action( 'my_materialpool_import',      array( 'MyMaterialpool', 'callbackImportAll' ) );
+
 		if ( is_admin() ){
 			add_action( 'admin_menu', array( 'MyMaterialpool', 'addSettingsMenu' ) );
 			add_action( 'admin_init', array( 'MyMaterialpool', 'registerSettingMenuSettings' ) );
@@ -1041,3 +1043,14 @@ add_action ( 'plugins_loaded', function(){
 	$myMaterialpool = new MyMaterialpool();
 });
 
+register_deactivation_hook( __FILE__, 'my_materialpool_deactivate' );
+function my_materialpool_deactivate() {
+	$timestamp = wp_next_scheduled( 'my_materialpool_import' );
+	wp_unschedule_event( $timestamp, 'my_materialpool_import' );
+}
+register_activation_hook( __FILE__, 'my_materialpool_activate' );
+function my_materialpool_activate() {
+	if ( ! wp_next_scheduled( 'my_materialpool_import' ) ) {
+		wp_schedule_event( time(), 'daily', 'my_materialpool_import' );
+	}
+}
