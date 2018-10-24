@@ -13,7 +13,7 @@
  * Plugin Name:       My Materialpool
  * Plugin URI:        https://github.com/rpi-virtuell/my-materialpool
  * Description:       RPI Virtuell My Materialpool
- * Version:           0.0.9
+ * Version:           0.0.10
  * Author:            Frank Neumann-Staude
  * Author URI:        https://staude.net
  * License:           GNU General Public License v3
@@ -97,7 +97,7 @@ class MyMaterialpool {
 		$atts = array_change_key_case((array)$atts, CASE_LOWER);
 		$scatts = shortcode_atts([
 			'view' => '',
-            'facets' => '',
+            'facets' => 'medientyp, bildungsstufe, altersstufe, materialschlagworte',
             'schlagwortfilter' => '',
             'medientypfilter' => '',
             'altersstufefilter' => '',
@@ -206,6 +206,18 @@ class MyMaterialpool {
 			}
 		}
 
+		$materialrubrikArray = array();
+		$materialrubriken     = get_query_var( "mpoolfacet_rubrik" );
+		if ( is_array( $materialrubriken ) ) {
+			foreach ( $materialrubriken as $materialrubrik ) {
+				$taxArray[] = array(
+					'taxonomy' => 'rubrik',
+					'field'    => 'slug',
+					'terms'    => $materialrubrik,
+				);
+			}
+		}
+
 		$taxquery = array();
 		if ( isset( $taxArray ) && is_array( $taxArray ) ) {
 			if ( count( $taxArray ) > 1 ) {
@@ -252,7 +264,7 @@ class MyMaterialpool {
 			$the_query = new WP_Query( $args );
 			$taxs = get_taxonomies( array( 'public' => true, 'query_var' => true ), 'objects' );
 			foreach ( $taxs as $tax ) {
-				if ( $tax->name != 'medientyp' && $tax->name != 'bildungsstufe' && $tax->name != 'altersstufe' && $tax->name != 'materialschlagworte') {
+				if ( $tax->name != 'medientyp' && $tax->name != 'bildungsstufe' && $tax->name != 'altersstufe' && $tax->name != 'materialschlagworte'&& $tax->name != 'rubrik') {
 					continue;
 				}
 				if ( $scatts[ 'facets' ]  != '' ) {
@@ -328,7 +340,7 @@ class MyMaterialpool {
 					$template2 = str_replace( '{material_beschreibung}', get_metadata( 'post', get_the_ID(), 'material_beschreibung', true ), $template2 );
 					$template2 = str_replace( '{material_screenshot}', '<img src="' . get_metadata( 'post', get_the_ID(), 'material_screenshot', true ) . '" class="mymaterial_cover">', $template2 );
 					$template2 = str_replace( '{material_schlagworte}', self::get_schlagworte( get_the_ID() ), $template2 );
-
+					$template2 = str_replace( '{material_rubriken}', self::get_rubriken( get_the_ID() ), $template2 );
 					$content  .= $template2;
 				}
 				$template = str_replace( '{results}', $content, $template );$content = '';
@@ -369,6 +381,7 @@ class MyMaterialpool {
 					$template2 = str_replace( '{material_beschreibung}', get_metadata( 'post', get_the_ID(), 'material_beschreibung', true ), $template2 );
 					$template2 = str_replace( '{material_screenshot}', '<img src="' . get_metadata( 'post', get_the_ID(), 'material_screenshot', true ) . '" class="mymaterial_cover">', $template2 );
 					$template2 = str_replace( '{material_schlagworte}', self::get_schlagworte( get_the_ID() ), $template2 );
+					$template2 = str_replace( '{material_rubriken}', self::get_rubriken( get_the_ID() ), $template2 );
 
 					$content  .= $template2;
 				}
@@ -454,6 +467,7 @@ class MyMaterialpool {
 		$vars[] = "mpoolfacet_altersstufe";
 		$vars[] = "mpoolfacet_medientyp";
 		$vars[] = "mpoolfacet_materialschlagworte";
+		$vars[] = "mpoolfacet_rubrik";
 		$vars[] = "mp-search";
 		return $vars;
 	}
@@ -506,13 +520,14 @@ class MyMaterialpool {
 	    self::registerTaxonomyMedientyp();
 	    self::registerTaxonomyAltersstufe();
 	    self::registerTaxonomyMaterialschlagworte();
+	    self::registerTaxonomyRubrik();
     }
 
     public static function addSettingsMenu() {
 		add_submenu_page(
-			'options-general.php',
-			'My Materialpool',
-			'My Materialpool',
+			'edit.php?post_type=material',
+			'Einstellungen',
+			'Einstellungen',
 			'administrator',
 			__FILE__,
 			array( 'MyMaterialpool', 'my_cool_plugin_settings_page' )
@@ -573,7 +588,7 @@ class MyMaterialpool {
                         <th scope="row">Template eines Ergebnisblocks</th>
                         <td><textarea name="mympool-template" class="large-text code" rows="8" ><?php echo esc_attr( get_option('mympool-template', self::$template ) ); ?></textarea>
                         <p>
-                            Folgende Macros sind möglich: {material_title}, {material_url}, {material_review_url}, {material_kurzbeschreibung}, {material_beschreibung}, {material_screenshot}, {material_schlagworte}
+                            Folgende Macros sind möglich: {material_title}, {material_url}, {material_review_url}, {material_kurzbeschreibung}, {material_beschreibung}, {material_screenshot}, {material_schlagworte}, {material_rubriken}
 
 
                         </p></td>
@@ -615,7 +630,7 @@ class MyMaterialpool {
                             [mymaterialpool view="facet"] gibt die Facetten aus.<br>
                             [mymaterialpool facets="bildungsstufe"] Beschränkt die Facetten auf die Facette Bildungsstufe.<br>
                             [mymaterialpool facets="bildungsstufe, altersstufe"] Beschränkt die Facetten auf die Facetten Bildungsstufe und Alterstufe.<br>
-                            Mögliche Facetten: altersstufe, bildungsstufe, medientyp, schlagwort<br>
+                            Mögliche Facetten: altersstufe, bildungsstufe, medientyp, schlagwort, rubrik<br>
                             [mymaterialpool bildungsstufefilter="schulstufen"] Filtert die zur Verfügung Materialien. Mögliche Filter sind  altersstufefilter, bildungsstufefilter, medientypfilter und schlagwortfilter.<br>
                             [mymaterialpool bildungsstufefilter="schulstufen" medientypfilter="praxishilfen"] Filtert auf Materialen der Bildungsstufen Schulstufen UND des Medientyps Praxishilfen<br>
                             [mymaterialpool schlagwortfilter="App,E-learning"] Filter auf Materialien mit den Schlagworten App UND E-Learnung.<br>
@@ -633,6 +648,7 @@ class MyMaterialpool {
                             Medientypen: <?php echo self::countMedientypen(); ?><br>
                             Altersstufen: <?php echo self::countAltersstufen(); ?><br>
                             Schlagworte: <?php echo self::countSchlagworte(); ?><br>
+                            Rubriken:  <?php echo self::countRubriken(); ?><br>
                         </td>
                     </tr>
                 </table>
@@ -671,6 +687,10 @@ class MyMaterialpool {
 
 	public static function countSchlagworte() {
 		return wp_count_terms( 'materialschlagworte' );
+	}
+
+	public static function countRubriken() {
+		return wp_count_terms( 'rubrik' );
 	}
 
     public static function importMedientyp() {
@@ -822,7 +842,10 @@ class MyMaterialpool {
 				        // Schlagworte hinzufügen
 				        foreach ( $remote_item_data['material_schlagworte']  as $tax ) {
 					        wp_set_post_terms( $materialid, $tax, 'materialschlagworte', true );
-
+				        }
+				        // Rubrik hinzufügen
+				        foreach ( $remote_item_data['material_rubrik']  as $tax ) {
+					        wp_set_post_terms( $materialid, $tax, 'rubrik', true );
 				        }
 
 			        } else {
@@ -890,6 +913,17 @@ class MyMaterialpool {
 			array(
 				'label' => __( 'Schlagworte' ),
 				'rewrite' => array( 'slug' => 'materialschlagworte' ),
+			)
+		);
+	}
+
+	public static function registerTaxonomyRubrik() {
+		register_taxonomy(
+			'rubrik',
+			'material',
+			array(
+				'label' => __( 'Rubriken' ),
+				'rewrite' => array( 'slug' => 'rubrik' ),
 			)
 		);
 	}
@@ -1023,7 +1057,26 @@ class MyMaterialpool {
         return $back;
     }
 
-    public function modify_list_cats ( $name, $category ) {
+	public function get_rubriken( $materialID ) {
+		$keywords = wp_get_object_terms ( $materialID, 'rubrik' );
+		$back = '';
+		if ( !empty( $keywords ) ) {
+			if ( ! is_wp_error( $keywords ) ) {
+				$count = 0;
+				foreach( $keywords as $term ) {
+					if ( $count > 0 ) {
+						$back .= ', ';
+					}
+					$back .= $term->name;
+					$count++;
+				}
+			}
+		}
+		return $back;
+	}
+
+
+	public function modify_list_cats ( $name, $category ) {
         global $myMaterialpoolKeywordCount;
 
         if (  $myMaterialpoolKeywordCount == '') {
