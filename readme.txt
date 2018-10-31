@@ -23,6 +23,9 @@ Importiert ausgewählte Einträge aus dem Materialpool und stellt diese in einer
 
 == Changelog ==
 
+= 0.0.12 =
+* [Fix] Variable names side effect
+
 = 0.0.11 =
 * [Changed] import material_autoren
 * [Added] material_autoren to template macros
