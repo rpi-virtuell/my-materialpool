@@ -302,7 +302,23 @@ class MyMaterialpool {
 					'show_count' => true,
 					'title_li'   => $tax->labels->name,
 				) );
-				$content .= ob_get_contents();
+				switch ( $tax->name ) {
+                    case 'medientyp':
+                        $medientyp = ob_get_contents();
+                        break;
+					case 'bildungsstufe':
+						$bildungsstufe = ob_get_contents();
+						break;
+					case 'altersstufe':
+						$altersstufe = ob_get_contents();
+						break;
+					case 'materialschlagworte':
+						$materialschlagworte = ob_get_contents();
+						break;
+					case 'rubrik':
+						$rubrik = ob_get_contents();
+						break;
+                }
 				ob_clean();
 				remove_filter( 'term_link', array( 'MyMaterialpool', 'term_link_filter' ) );
 				remove_filter( 'get_terms', array( 'MyMaterialpool', 'get_terms_filter' ) );
@@ -310,6 +326,29 @@ class MyMaterialpool {
 					remove_filter( 'list_cats', array( 'MyMaterialpool', 'modify_list_cats' ));
 				}
 			}
+			// Facetten in Reihenfolge ausgeben
+			$out = explode( ',', $scatts[ 'facets'] ) ;
+			foreach ( $out as $outfacet ) {
+				$outfacet = trim( $outfacet );
+				switch ( $outfacet ) {
+					case 'medientyp':
+						$content .= $medientyp;
+						break;
+					case 'bildungsstufe':
+						$content .= $bildungsstufe;
+						break;
+					case 'altersstufe':
+						$content .= $altersstufe;
+						break;
+					case 'schlagwort':
+						$content .= $materialschlagworte;
+						break;
+					case 'rubrik':
+						$content .= $rubrik;
+						break;
+				}
+			}
+
 			$template = str_replace( '{facetlist}', $content, $template ); $content = '';
 			$template = str_replace( '{searchquery}', $search, $template );
 
@@ -340,7 +379,10 @@ class MyMaterialpool {
 					$template2 = str_replace( '{material_beschreibung}', get_metadata( 'post', get_the_ID(), 'material_beschreibung', true ), $template2 );
 					$template2 = str_replace( '{material_screenshot}', '<img src="' . get_metadata( 'post', get_the_ID(), 'material_screenshot', true ) . '" class="mymaterial_cover">', $template2 );
 					$template2 = str_replace( '{material_schlagworte}', self::get_schlagworte( get_the_ID() ), $template2 );
+					$template2 = str_replace( '{material_schlagworte_link}', self::get_schlagworte_link( get_the_ID() ), $template2 );
 					$template2 = str_replace( '{material_rubriken}', self::get_rubriken( get_the_ID() ), $template2 );
+					$template2 = str_replace( '{material_autoren}', self::get_autoren( get_the_ID() ), $template2 );
+
 					$content  .= $template2;
 				}
 				$template = str_replace( '{results}', $content, $template );$content = '';
@@ -381,7 +423,9 @@ class MyMaterialpool {
 					$template2 = str_replace( '{material_beschreibung}', get_metadata( 'post', get_the_ID(), 'material_beschreibung', true ), $template2 );
 					$template2 = str_replace( '{material_screenshot}', '<img src="' . get_metadata( 'post', get_the_ID(), 'material_screenshot', true ) . '" class="mymaterial_cover">', $template2 );
 					$template2 = str_replace( '{material_schlagworte}', self::get_schlagworte( get_the_ID() ), $template2 );
+					$template2 = str_replace( '{material_schlagworte_link}', self::get_schlagworte_link( get_the_ID() ), $template2 );
 					$template2 = str_replace( '{material_rubriken}', self::get_rubriken( get_the_ID() ), $template2 );
+					$template2 = str_replace( '{material_autoren}', self::get_autoren( get_the_ID() ), $template2 );
 
 					$content  .= $template2;
 				}
@@ -395,56 +439,95 @@ class MyMaterialpool {
 			$content = '';
 			$template = get_option('mympool-templateviewfacet', self::$template_viewfacet  );
 
-				$the_query = new WP_Query( $args );
+            $the_query = new WP_Query( $args );
 
-				$taxs = get_taxonomies( array( 'public' => true, 'query_var' => true ), 'objects' );
-				foreach ( $taxs as $tax ) {
-					if ( $tax->name != 'medientyp' && $tax->name != 'bildungsstufe' && $tax->name != 'altersstufe' && $tax->name != 'materialschlagworte') {
-						continue;
-					}
-					if ( $scatts[ 'facets' ]  != '' ) {
-						$facetArray = explode( ',', $scatts[ 'facets' ]  );
-						foreach ( $facetArray as $key => $item ) {
-							if ( trim( $item )  == 'schlagwort' ) {
-								$item = "materialschlagworte";
-							}
-							$facetArray[ $key ] = trim ( $item );
-						}
-						if ( ! in_array( $tax->name, $facetArray ) ) {
-							continue;
-						}
-					}
-					if ( ! $tax->hierarchical && self::tax_in_query( $tax->name, $the_query ) ) {
-						continue;
-					} else if ( $tax->hierarchical && self::tax_in_query( $tax->name, $the_query ) ) {
-						$termID = term_exists( get_query_var( $tax->query_var ) );
-						$terms  = get_terms( $tax->name, array( 'child_of' => $termID ) );
-					} else {
-						$terms = get_terms( $tax->name );
-					}
-					if ( sizeof( $terms ) == 0 ) {
-						continue;
-					}
+            $taxs = get_taxonomies( array( 'public' => true, 'query_var' => true ), 'objects' );
+            foreach ( $taxs as $tax ) {
+                if ( $tax->name != 'medientyp' && $tax->name != 'bildungsstufe' && $tax->name != 'altersstufe' && $tax->name != 'materialschlagworte') {
+                    continue;
+                }
+                if ( $scatts[ 'facets' ]  != '' ) {
+                    $facetArray = explode( ',', $scatts[ 'facets' ]  );
+                    foreach ( $facetArray as $key => $item ) {
+                        if ( trim( $item )  == 'schlagwort' ) {
+                            $item = "materialschlagworte";
+                        }
+                        $facetArray[ $key ] = trim ( $item );
+                    }
+                    if ( ! in_array( $tax->name, $facetArray ) ) {
+                        continue;
+                    }
+                }
+                if ( ! $tax->hierarchical && self::tax_in_query( $tax->name, $the_query ) ) {
+                    continue;
+                } else if ( $tax->hierarchical && self::tax_in_query( $tax->name, $the_query ) ) {
+                    $termID = term_exists( get_query_var( $tax->query_var ) );
+                    $terms  = get_terms( $tax->name, array( 'child_of' => $termID ) );
+                } else {
+                    $terms = get_terms( $tax->name );
+                }
+                if ( sizeof( $terms ) == 0 ) {
+                    continue;
+                }
 
-					add_filter( 'term_link', array( 'MyMaterialpool', 'term_link_filter' ), 10, 3 );
-					add_filter( 'get_terms', array( 'MyMaterialpool', 'get_terms_filter' ), 10, 3 );
-					if ( $tax->name == 'materialschlagworte' ) {
-						add_filter( 'list_cats', array( 'MyMaterialpool', 'modify_list_cats' ), 10, 2 );
-					}
-					ob_start();
-					wp_list_categories( array(
-						'taxonomy'   => $tax->name,
-						'show_count' => true,
-						'title_li'   => $tax->labels->name,
-					) );
-					$content .= ob_get_contents();
-					ob_clean();
-					remove_filter( 'term_link', array( 'MyMaterialpool', 'term_link_filter' ) );
-					remove_filter( 'get_terms', array( 'MyMaterialpool', 'get_terms_filter' ) );
-					if ( $tax->name == 'materialschlagworte' ) {
-						remove_filter( 'list_cats', array( 'MyMaterialpool', 'modify_list_cats' ) );
-					}
-				}
+                add_filter( 'term_link', array( 'MyMaterialpool', 'term_link_filter' ), 10, 3 );
+                add_filter( 'get_terms', array( 'MyMaterialpool', 'get_terms_filter' ), 10, 3 );
+                if ( $tax->name == 'materialschlagworte' ) {
+                    add_filter( 'list_cats', array( 'MyMaterialpool', 'modify_list_cats' ), 10, 2 );
+                }
+                ob_start();
+                wp_list_categories( array(
+                    'taxonomy'   => $tax->name,
+                    'show_count' => true,
+                    'title_li'   => $tax->labels->name,
+                ) );
+                switch ( $tax->name ) {
+                    case 'medientyp':
+                        $medientyp = ob_get_contents();
+                        break;
+                    case 'bildungsstufe':
+                        $bildungsstufe = ob_get_contents();
+                        break;
+                    case 'altersstufe':
+                        $altersstufe = ob_get_contents();
+                        break;
+                    case 'materialschlagworte':
+                        $materialschlagworte = ob_get_contents();
+                        break;
+                    case 'rubrik':
+                        $rubrik = ob_get_contents();
+                        break;
+                }
+                ob_clean();
+                remove_filter( 'term_link', array( 'MyMaterialpool', 'term_link_filter' ) );
+                remove_filter( 'get_terms', array( 'MyMaterialpool', 'get_terms_filter' ) );
+                if ( $tax->name == 'materialschlagworte' ) {
+                    remove_filter( 'list_cats', array( 'MyMaterialpool', 'modify_list_cats' ) );
+                }
+            }
+
+            // Facetten in Reihenfolge ausgeben
+			$out = explode( ',', $scatts[ 'facets'] ) ;
+            foreach ( $out as $outfacet ) {
+                $outfacet = trim( $outfacet );
+                switch ( $outfacet ) {
+	                case 'medientyp':
+		                $content .= $medientyp;
+		                break;
+	                case 'bildungsstufe':
+		                $content .= $bildungsstufe;
+		                break;
+	                case 'altersstufe':
+		                $content .= $altersstufe;
+		                break;
+	                case 'schlagwort':
+		                $content .= $materialschlagworte;
+		                break;
+	                case 'rubrik':
+		                $content .= $rubrik;
+		                break;
+                }
+            }
 
 			$template = str_replace( '{facetlist}', $content, $template );
 			$content = $template;
@@ -588,7 +671,7 @@ class MyMaterialpool {
                         <th scope="row">Template eines Ergebnisblocks</th>
                         <td><textarea name="mympool-template" class="large-text code" rows="8" ><?php echo esc_attr( get_option('mympool-template', self::$template ) ); ?></textarea>
                         <p>
-                            Folgende Macros sind möglich: {material_title}, {material_url}, {material_review_url}, {material_kurzbeschreibung}, {material_beschreibung}, {material_screenshot}, {material_schlagworte}, {material_rubriken}
+                            Folgende Macros sind möglich: {material_title}, {material_url}, {material_review_url}, {material_kurzbeschreibung}, {material_beschreibung}, {material_screenshot}, {material_schlagworte}, {material_schlagworte_link}, {material_rubriken}, {material_autoren}
 
 
                         </p></td>
@@ -817,6 +900,7 @@ class MyMaterialpool {
 					        'material_kurzbeschreibung' => $remote_item_data['material_kurzbeschreibung'],
 					        'material_beschreibung'     => $remote_item_data['material_beschreibung'],
 					        'material_screenshot'       => $remote_item_data['material_screenshot'],
+					        'material_autoren'          => $remote_item_data['material_autoren'],
 				        ),
 			        );
 			        // Prüfen ob Slug schon vorhanden.
@@ -953,6 +1037,7 @@ class MyMaterialpool {
 		self::deleteTerms( 'medientyp' );
 		self::deleteTerms( 'altersstufe' );
 		self::deleteTerms( 'materialschlagworte' );
+		self::deleteTerms( 'rubrik' );
 		self::deletePosts( 'material' );
 				wp_die();
 	}
@@ -1057,6 +1142,24 @@ class MyMaterialpool {
         return $back;
     }
 
+	public function get_schlagworte_link ( $materialID ) {
+		$keywords = wp_get_object_terms ( $materialID, 'materialschlagworte' );
+		$back = '';
+		if ( !empty( $keywords ) ) {
+			if ( ! is_wp_error( $keywords ) ) {
+				$count = 0;
+				foreach( $keywords as $term ) {
+					if ( $count > 0 ) {
+						$back .= ', ';
+					}
+					$back .= "<a class='mypoolschlagwortlink' href='?mpoolfacet_materialschlagworte%5B%5D=" . $term->slug . "'>" . $term->name . "</a>";
+					$count++;
+				}
+			}
+		}
+		return $back;
+	}
+
 	public function get_rubriken( $materialID ) {
 		$keywords = wp_get_object_terms ( $materialID, 'rubrik' );
 		$back = '';
@@ -1071,6 +1174,23 @@ class MyMaterialpool {
 					$count++;
 				}
 			}
+		}
+		return $back;
+	}
+
+
+	public function get_autoren( $materialID ) {
+		$autoren = get_post_meta( $materialID, 'material_autoren', true );
+		$back = '';
+		if ( !empty( $autoren ) ) {
+			$count = 0;
+            foreach( $autoren as $autor ) {
+                if ( $count > 0 ) {
+                    $back .= ', ';
+                }
+                $back .= $autor[ 'name' ];
+                $count++;
+            }
 		}
 		return $back;
 	}
