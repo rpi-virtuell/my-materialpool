@@ -304,19 +304,19 @@ class MyMaterialpool {
 				) );
 				switch ( $tax->name ) {
                     case 'medientyp':
-                        $medientyp = ob_get_contents();
+                        $obmedientyp = ob_get_contents();
                         break;
 					case 'bildungsstufe':
-						$bildungsstufe = ob_get_contents();
+						$obbildungsstufe = ob_get_contents();
 						break;
 					case 'altersstufe':
-						$altersstufe = ob_get_contents();
+						$obaltersstufe = ob_get_contents();
 						break;
 					case 'materialschlagworte':
-						$materialschlagworte = ob_get_contents();
+						$obmaterialschlagworte = ob_get_contents();
 						break;
 					case 'rubrik':
-						$rubrik = ob_get_contents();
+						$obrubrik = ob_get_contents();
 						break;
                 }
 				ob_clean();
@@ -327,24 +327,24 @@ class MyMaterialpool {
 				}
 			}
 			// Facetten in Reihenfolge ausgeben
-			$out = explode( ',', $scatts[ 'facets'] ) ;
+			$out = explode( ',', $scatts[ 'facets' ] ) ;
 			foreach ( $out as $outfacet ) {
 				$outfacet = trim( $outfacet );
 				switch ( $outfacet ) {
 					case 'medientyp':
-						$content .= $medientyp;
+						$content .= $obmedientyp;
 						break;
 					case 'bildungsstufe':
-						$content .= $bildungsstufe;
+						$content .= $obbildungsstufe;
 						break;
 					case 'altersstufe':
-						$content .= $altersstufe;
+						$content .= $obaltersstufe;
 						break;
 					case 'schlagwort':
-						$content .= $materialschlagworte;
+						$content .= $obmaterialschlagworte;
 						break;
 					case 'rubrik':
-						$content .= $rubrik;
+						$content .= $obrubrik;
 						break;
 				}
 			}
@@ -483,19 +483,19 @@ class MyMaterialpool {
                 ) );
                 switch ( $tax->name ) {
                     case 'medientyp':
-                        $medientyp = ob_get_contents();
+                        $obmedientyp = ob_get_contents();
                         break;
                     case 'bildungsstufe':
-                        $bildungsstufe = ob_get_contents();
+                        $obbildungsstufe = ob_get_contents();
                         break;
                     case 'altersstufe':
-                        $altersstufe = ob_get_contents();
+                        $obaltersstufe = ob_get_contents();
                         break;
                     case 'materialschlagworte':
-                        $materialschlagworte = ob_get_contents();
+	                    $obmaterialschlagworte = ob_get_contents();
                         break;
                     case 'rubrik':
-                        $rubrik = ob_get_contents();
+                        $obrubrik = ob_get_contents();
                         break;
                 }
                 ob_clean();
@@ -512,19 +512,19 @@ class MyMaterialpool {
                 $outfacet = trim( $outfacet );
                 switch ( $outfacet ) {
 	                case 'medientyp':
-		                $content .= $medientyp;
+		                $content .= $obmedientyp;
 		                break;
 	                case 'bildungsstufe':
-		                $content .= $bildungsstufe;
+		                $content .= $obbildungsstufe;
 		                break;
 	                case 'altersstufe':
-		                $content .= $altersstufe;
+		                $content .= $obaltersstufe;
 		                break;
 	                case 'schlagwort':
-		                $content .= $materialschlagworte;
+		                $content .= $obmaterialschlagworte;
 		                break;
 	                case 'rubrik':
-		                $content .= $rubrik;
+		                $content .= $obrubrik;
 		                break;
                 }
             }
