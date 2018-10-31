@@ -25,7 +25,7 @@ Importiert ausgewählte Einträge aus dem Materialpool und stellt diese in einer
 
 = 0.0.11 =
 * [Changed] import material_autoren
-* [Added] material_rubrik to template macros
+* [Added] material_autoren to template macros
 * [Added] material_schlagworte_link to template macros
 * [Changed] Facets are output in the order in which they are specified in the facet parameter.
 
