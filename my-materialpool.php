@@ -13,7 +13,7 @@
  * Plugin Name:       My Materialpool
  * Plugin URI:        https://github.com/rpi-virtuell/my-materialpool
  * Description:       RPI Virtuell My Materialpool
- * Version:           0.0.12
+ * Version:           0.0.13
  * Author:            Frank Neumann-Staude
  * Author URI:        https://staude.net
  * License:           GNU General Public License v3
@@ -94,6 +94,7 @@ class MyMaterialpool {
 
 	public static function shortcode( $atts ) {
         global $myMaterialpoolKeywordCount;
+		global $myMaterialpoolKeywordIds;
 		$atts = array_change_key_case((array)$atts, CASE_LOWER);
 		$scatts = shortcode_atts([
 			'view' => '',
@@ -236,25 +237,83 @@ class MyMaterialpool {
 			}
 		}
 
+
+
 		$search = get_query_var( "mp-search" );
-		$args   = array(
-			'post_type'      => 'material',
-			'posts_per_page' => - 1,
-			'tax_query'      => $taxquery,
-			's'              => $search
-		);
+        $ids = array();
+		if ( $search != '' ) {
+			// PostID von Suchwort-Treffern im Material
+			$args   = array(
+				'post_type'      => 'material',
+				'posts_per_page' => - 1,
+				's'              => $search
+			);
+			$the_query = new WP_Query( $args );
+			if ( $the_query->have_posts() ) {
+				while ( $the_query->have_posts() ) {
+					$the_query->the_post();
+					$ids[] = get_the_ID();
+				}
+			}
+
+			$args = array(
+				'post_type' => 'material',
+				'posts_per_page' => -1,
+				'tax_query' => array( // NOTE: array of arrays!
+					array(
+						'taxonomy' => 'materialschlagworte',
+						'field'    => 'name',
+						'terms'    => $search,
+					)
+				)
+			);
+			$the_query = new WP_Query( $args );
+			if ( $the_query->have_posts() ) {
+				while ( $the_query->have_posts() ) {
+					$the_query->the_post();
+					$ids[] = get_the_ID();
+				}
+			}
+
+        }
+
+		$myMaterialpoolKeywordIds = $ids;
+        if ( count( $ids ) > 0 ) {
+	        $args   = array(
+		        'post_type'      => 'material',
+		        'posts_per_page' => - 1,
+		        'tax_query'      => $taxquery,
+		        'post__in'       => $ids,
+	        );
+        } else {
+	        $args   = array(
+		        'post_type'      => 'material',
+		        'posts_per_page' => - 1,
+		        'tax_query'      => $taxquery,
+		        's'              => $search
+	        );
+        }
 
 		$the_query = new WP_Query( $args );
 		$anzahl    = $the_query->post_count;
-		$args      = array(
-			'post_type'      => 'material',
-			'paged'          => $paged,
-			'posts_per_page' => 10,
-			'tax_query'      => $taxquery,
-			's'              => $search
-		);
 
-
+		if ( count( $ids ) > 0 ) {
+			$args   = array(
+				'post_type'      => 'material',
+				'paged'          => $paged,
+				'posts_per_page' => 10,
+				'tax_query'      => $taxquery,
+				'post__in'       => $ids,
+			);
+		} else {
+			$args   = array(
+				'post_type'      => 'material',
+				'paged'          => $paged,
+				'posts_per_page' => 10,
+				'tax_query'      => $taxquery,
+				's'              => $search,
+            );
+		}
 
 		if ( $scatts[ 'view' ]  == '' ) {
             $content = '';
@@ -562,6 +621,8 @@ class MyMaterialpool {
 
 	public static  function get_terms_filter( $terms, $taxonomies, $args ) {
 		global $the_query;
+		global $myMaterialpoolKeywordIds;
+
 		remove_filter( 'term_link', array( 'MyMaterialpool', 'term_link_filter' ) );
 		remove_filter( 'get_terms', array( 'MyMaterialpool', 'get_terms_filter') );
 		$tax = get_taxonomy( $taxonomies[0] );
@@ -576,7 +637,18 @@ class MyMaterialpool {
 				'terms'		=> 	$term->slug,
 
 			);
-			$query = new WP_Query( array( 's' =>  $search,'tax_query' => $tax_query ) );
+			if ( count( $myMaterialpoolKeywordIds ) > 0 ) {
+				$args   = array(
+					'tax_query'      => $tax_query,
+					'post__in'       => $myMaterialpoolKeywordIds,
+				);
+			} else {
+				$args   = array(
+					'tax_query'      => $tax_query,
+					's'              => $search
+				);
+			}
+			$query = new WP_Query( $args );
 			//If this term has no posts, don't display the link
 			if ( !$query->found_posts )
 				unset( $terms[ $id ] );
@@ -1209,6 +1281,7 @@ class MyMaterialpool {
 	        }
         }
     }
+
 }
 
 add_action( 'init',array( 'MyMaterialpool', 'init' ) );

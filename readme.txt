@@ -3,7 +3,7 @@ Contributors: fstaude, johappel
 Tags: cron, wp cron, cron jobs, manager, cron manager, crontrol
 Requires at least: 4.0
 Tested up to: 4.9.8
-Stable tag: 0.0.10
+Stable tag: 0.0.13
 License: GPLv2
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -22,6 +22,9 @@ Importiert ausgewählte Einträge aus dem Materialpool und stellt diese in einer
 
 
 == Changelog ==
+
+= 0.0.13 =
+* [Added] The search also searches the taxonomy materialschlagworte in addition to the materials
 
 = 0.0.12 =
 * [Fix] Variable names side effect
