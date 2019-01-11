@@ -13,7 +13,7 @@
  * Plugin Name:       My Materialpool
  * Plugin URI:        https://github.com/rpi-virtuell/my-materialpool
  * Description:       RPI Virtuell My Materialpool
- * Version:           0.0.13
+ * Version:           0.0.14
  * Author:            Frank Neumann-Staude
  * Author URI:        https://staude.net
  * License:           GNU General Public License v3
@@ -435,7 +435,7 @@ class MyMaterialpool {
 					$template2 = str_replace( '{material_url}', get_metadata( 'post', get_the_ID(), 'material_url', true ), $template2 );
 					$template2 = str_replace( '{material_review_url}', get_metadata( 'post', get_the_ID(), 'material_review_url', true ), $template2 );
 					$template2 = str_replace( '{material_kurzbeschreibung}', get_metadata( 'post', get_the_ID(), 'material_kurzbeschreibung', true ), $template2 );
-					$template2 = str_replace( '{material_beschreibung}', get_metadata( 'post', get_the_ID(), 'material_beschreibung', true ), $template2 );
+					$template2 = str_replace( '{material_beschreibung}',  wp_trim_words(wp_strip_all_tags( strip_shortcodes ( get_metadata( 'post', get_the_ID(), 'material_beschreibung', true ) ))), $template2 );
 					$template2 = str_replace( '{material_screenshot}', '<img src="' . get_metadata( 'post', get_the_ID(), 'material_screenshot', true ) . '" class="mymaterial_cover">', $template2 );
 					$template2 = str_replace( '{material_schlagworte}', self::get_schlagworte( get_the_ID() ), $template2 );
 					$template2 = str_replace( '{material_schlagworte_link}', self::get_schlagworte_link( get_the_ID() ), $template2 );
@@ -479,7 +479,7 @@ class MyMaterialpool {
 					$template2 = str_replace( '{material_url}', get_metadata( 'post', get_the_ID(), 'material_url', true ), $template2 );
 					$template2 = str_replace( '{material_review_url}', get_metadata( 'post', get_the_ID(), 'material_review_url', true ), $template2 );
 					$template2 = str_replace( '{material_kurzbeschreibung}', get_metadata( 'post', get_the_ID(), 'material_kurzbeschreibung', true ), $template2 );
-					$template2 = str_replace( '{material_beschreibung}', get_metadata( 'post', get_the_ID(), 'material_beschreibung', true ), $template2 );
+					$template2 = str_replace( '{material_beschreibung}',  wp_trim_words(wp_strip_all_tags( strip_shortcodes (get_metadata( 'post', get_the_ID(), 'material_beschreibung', true )))), $template2 );
 					$template2 = str_replace( '{material_screenshot}', '<img src="' . get_metadata( 'post', get_the_ID(), 'material_screenshot', true ) . '" class="mymaterial_cover">', $template2 );
 					$template2 = str_replace( '{material_schlagworte}', self::get_schlagworte( get_the_ID() ), $template2 );
 					$template2 = str_replace( '{material_schlagworte_link}', self::get_schlagworte_link( get_the_ID() ), $template2 );
