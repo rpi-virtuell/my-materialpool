@@ -104,6 +104,9 @@ class MyMaterialpool {
             'altersstufefilter' => '',
             'bildungsstufefilter' => '',
             'min_schlagwort_treffer' => '',
+			'eltern_id' => '',
+			'order' => '',
+			'orderby' => ''		 
 		], $atts );
 
 		$myMaterialpoolKeywordCount = $scatts[ 'min_schlagwort_treffer' ];
@@ -245,7 +248,7 @@ class MyMaterialpool {
 			// PostID von Suchwort-Treffern im Material
 			$args   = array(
 				'post_type'      => 'material',
-				'posts_per_page' => - 1,
+				'posts_per_page' => -1,
 				's'              => $search
 			);
 			$the_query = new WP_Query( $args );
@@ -315,6 +318,21 @@ class MyMaterialpool {
             );
 		}
 
+		if ( $scatts[ 'eltern_id' ]  != '' ) {
+			$args['post_parent'] = $scatts[ 'eltern_id' ];
+		}
+		$scatts['order'] = ($scatts[ 'order' ] == 'ASC')? 'ASC' : 'DESC';
+			
+		
+		if ( $scatts[ 'orderby' ]  != '' ) {
+			$args['orderby'] = $scatts[ 'orderby' ];
+			
+			if( in_array($scatts[ 'orderby' ],array('date','title', 'menu_order')) === false){
+				$args['orderby'] = array('meta_value_num' => $scatts['order'] );
+				$args['meta_key'] = $scatts[ 'orderby' ];
+			}
+			
+		
 		if ( $scatts[ 'view' ]  == '' ) {
             $content = '';
 			$template = get_option('mympool-templateview', self::$template_view  );
@@ -435,6 +453,7 @@ class MyMaterialpool {
 					$template2 = str_replace( '{material_url}', get_metadata( 'post', get_the_ID(), 'material_url', true ), $template2 );
 					$template2 = str_replace( '{material_review_url}', get_metadata( 'post', get_the_ID(), 'material_review_url', true ), $template2 );
 					$template2 = str_replace( '{material_kurzbeschreibung}', get_metadata( 'post', get_the_ID(), 'material_kurzbeschreibung', true ), $template2 );
+					$template2 = str_replace( '{material_jahr}', get_metadata( 'post', get_the_ID(), 'material_jahr', true ), $template2 );																										
 					$template2 = str_replace( '{material_beschreibung}',  wp_trim_words(wp_strip_all_tags( strip_shortcodes ( get_metadata( 'post', get_the_ID(), 'material_beschreibung', true ) ))), $template2 );
 					$template2 = str_replace( '{material_screenshot}', '<img src="' . get_metadata( 'post', get_the_ID(), 'material_screenshot', true ) . '" class="mymaterial_cover">', $template2 );
 					$template2 = str_replace( '{material_schlagworte}', self::get_schlagworte( get_the_ID() ), $template2 );
@@ -477,6 +496,7 @@ class MyMaterialpool {
 					$the_query->the_post();
 					$template2 = str_replace( '{material_title}', get_the_title(), $template2 );
 					$template2 = str_replace( '{material_url}', get_metadata( 'post', get_the_ID(), 'material_url', true ), $template2 );
+					$template2 = str_replace( '{material_jahr}', get_metadata( 'post', get_the_ID(), 'material_jahr', true ), $template2 );																															
 					$template2 = str_replace( '{material_review_url}', get_metadata( 'post', get_the_ID(), 'material_review_url', true ), $template2 );
 					$template2 = str_replace( '{material_kurzbeschreibung}', get_metadata( 'post', get_the_ID(), 'material_kurzbeschreibung', true ), $template2 );
 					$template2 = str_replace( '{material_beschreibung}',  wp_trim_words(wp_strip_all_tags( strip_shortcodes (get_metadata( 'post', get_the_ID(), 'material_beschreibung', true )))), $template2 );
@@ -961,6 +981,7 @@ class MyMaterialpool {
 			        $post_arr = array(
 				        'post_name'    => $remote_item_data['slug'],
 				        'post_title'   => $remote_item_data['material_titel'],
+						'post_parent'   => $remote_item_data['parent'],								   
 				        'post_content' => $remote_item_data['material_beschreibung']. ' ',
 				        'post_status'  => 'publish',
 				        'post_author'  => get_current_user_id(),
@@ -973,6 +994,7 @@ class MyMaterialpool {
 					        'material_beschreibung'     => $remote_item_data['material_beschreibung'],
 					        'material_screenshot'       => $remote_item_data['material_screenshot'],
 					        'material_autoren'          => $remote_item_data['material_autoren'],
+							'material_jahr'          	=> $remote_item_data['material_jahr'],												 
 				        ),
 			        );
 			        // Prüfen ob Slug schon vorhanden.
@@ -1020,8 +1042,12 @@ class MyMaterialpool {
 	public static function registerMaterialPostType() {
 		$args = array(
 			'public' => true,
-			'label'  => 'Material'
-		);
+			'label'  => 'Material',
+			'supports' => array(
+				'title',
+				'editor',
+				'custom-fields'
+				)		   
 		register_post_type( 'material', $args );
 	}
 
