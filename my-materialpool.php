@@ -325,14 +325,13 @@ class MyMaterialpool {
 			
 		
 		if ( $scatts[ 'orderby' ]  != '' ) {
-			$args['orderby'] = $scatts[ 'orderby' ];
-			
-			if( in_array($scatts[ 'orderby' ],array('date','title', 'menu_order')) === false){
-				$args['orderby'] = array('meta_value_num' => $scatts['order'] );
-				$args['meta_key'] = $scatts[ 'orderby' ];
+			$args['orderby'] = $scatts['orderby'];
+
+			if ( in_array( $scatts['orderby'], array( 'date', 'title', 'menu_order' ) ) === false ) {
+				$args['orderby']  = array( 'meta_value_num' => $scatts['order'] );
+				$args['meta_key'] = $scatts['orderby'];
 			}
-			
-		
+		}
 		if ( $scatts[ 'view' ]  == '' ) {
             $content = '';
 			$template = get_option('mympool-templateview', self::$template_view  );
