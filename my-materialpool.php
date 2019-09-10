@@ -1046,7 +1046,8 @@ class MyMaterialpool {
 				'title',
 				'editor',
 				'custom-fields'
-				)		   
+				)
+        );
 		register_post_type( 'material', $args );
 	}
 
