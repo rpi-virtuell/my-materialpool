@@ -13,7 +13,7 @@
  * Plugin Name:       My Materialpool
  * Plugin URI:        https://github.com/rpi-virtuell/my-materialpool
  * Description:       RPI Virtuell My Materialpool
- * Version:           0.0.14
+ * Version:           0.0.15
  * Author:            Frank Neumann-Staude
  * Author URI:        https://staude.net
  * License:           GNU General Public License v3
@@ -79,7 +79,6 @@ class MyMaterialpool {
 	    add_action( 'wp_ajax_mympool_delete_all',  array( 'MyMaterialpool', 'callbackDeleteAll' ) );
 	    add_action( 'wp_ajax_mympool_import_all',  array( 'MyMaterialpool', 'callbackImportAll' ) );
 	    add_action( 'my_materialpool_import',      array( 'MyMaterialpool', 'callbackImportAll' ) );
-
 		if ( is_admin() ){
 			add_action( 'admin_menu', array( 'MyMaterialpool', 'addSettingsMenu' ) );
 			add_action( 'admin_init', array( 'MyMaterialpool', 'registerSettingMenuSettings' ) );
@@ -88,8 +87,6 @@ class MyMaterialpool {
 		}
 		add_shortcode( 'mymaterialpool', array( 'MyMaterialpool', 'shortcode' ) );
 	    add_filter( 'query_vars', array( 'MyMaterialpool', 'add_query_vars_filter' ) );
-
-	    error_log( 'constructor');
 	}
 
 	public static function shortcode( $atts ) {
@@ -130,6 +127,7 @@ class MyMaterialpool {
 		}
 
 		if ( $scatts[ 'medientypfilter' ]  != '' ) {
+
 			$medientypfilterArray = explode( ',', $scatts[ 'medientypfilter' ]  );
 			foreach ( $medientypfilterArray as $key => $item ) {
 				$taxArray2[] = array(
@@ -165,6 +163,9 @@ class MyMaterialpool {
 
 		$bildungsstufeArray = array();
 		$bildungsstufen     = get_query_var( "mpoolfacet_bildungsstufe" );
+		if ( is_array( $bildungsstufen) ) {
+		    $bildungsstufen = array_unique( $bildungsstufen );
+        }
 		if ( is_array( $bildungsstufen ) ) {
 			foreach ( $bildungsstufen as $bildungsstufe ) {
 				$taxArray[] = array(
@@ -177,6 +178,10 @@ class MyMaterialpool {
 
 		$medientypeArray = array();
 		$medientypen     = get_query_var( "mpoolfacet_medientyp" );
+		if ( is_array( $medientypen) ) {
+			$medientypen = array_unique( $medientypen );
+		}
+
 		if ( is_array( $medientypen ) ) {
 			foreach ( $medientypen as $medientype ) {
 				$taxArray[] = array(
@@ -188,6 +193,9 @@ class MyMaterialpool {
 		}
 		$altersstufeArray = array();
 		$altersstufen     = get_query_var( "mpoolfacet_altersstufe" );
+		if ( is_array( $altersstufen) ) {
+			$altersstufen = array_unique( $altersstufen );
+		}
 		if ( is_array( $altersstufen ) ) {
 			foreach ( $altersstufen as $altersstufe ) {
 				$taxArray[] = array(
@@ -200,6 +208,9 @@ class MyMaterialpool {
 
 		$materialschlagworteArray = array();
 		$materialschlagworte     = get_query_var( "mpoolfacet_materialschlagworte" );
+		if ( is_array( $materialschlagworte) ) {
+			$materialschlagworte = array_unique( $materialschlagworte );
+		}
 		if ( is_array( $materialschlagworte ) ) {
 			foreach ( $materialschlagworte as $materialschlagwort ) {
 				$taxArray[] = array(
@@ -212,6 +223,9 @@ class MyMaterialpool {
 
 		$materialrubrikArray = array();
 		$materialrubriken     = get_query_var( "mpoolfacet_rubrik" );
+		if ( is_array( $materialrubriken) ) {
+			$materialrubriken = array_unique( $materialrubriken );
+		}
 		if ( is_array( $materialrubriken ) ) {
 			foreach ( $materialrubriken as $materialrubrik ) {
 				$taxArray[] = array(
@@ -369,6 +383,7 @@ class MyMaterialpool {
 
 				add_filter( 'term_link', array( 'MyMaterialpool', 'term_link_filter' ), 10, 3 );
 				add_filter( 'get_terms', array( 'MyMaterialpool', 'get_terms_filter' ), 10, 3 );
+				add_filter( 'category_list_link_attributes', array( 'MyMaterialpool', 'category_list_link_attributes' ), 10,5 );
 				if ( $tax->name == 'materialschlagworte' ) {
     				add_filter( 'list_cats', array( 'MyMaterialpool', 'modify_list_cats' ), 10, 2 );
 				}
@@ -398,6 +413,7 @@ class MyMaterialpool {
 				ob_clean();
 				remove_filter( 'term_link', array( 'MyMaterialpool', 'term_link_filter' ) );
 				remove_filter( 'get_terms', array( 'MyMaterialpool', 'get_terms_filter' ) );
+				remove_filter( 'category_list_link_attributes', array( 'MyMaterialpool', 'category_list_link_attributes' ) );
 				if ( $tax->name == 'materialschlagworte' ) {
 					remove_filter( 'list_cats', array( 'MyMaterialpool', 'modify_list_cats' ));
 				}
@@ -550,15 +566,18 @@ class MyMaterialpool {
 
                 add_filter( 'term_link', array( 'MyMaterialpool', 'term_link_filter' ), 10, 3 );
                 add_filter( 'get_terms', array( 'MyMaterialpool', 'get_terms_filter' ), 10, 3 );
+	            add_filter( 'category_list_link_attributes', array( 'MyMaterialpool', 'category_list_link_attributes' ), 10,5 );
                 if ( $tax->name == 'materialschlagworte' ) {
                     add_filter( 'list_cats', array( 'MyMaterialpool', 'modify_list_cats' ), 10, 2 );
                 }
                 ob_start();
+
                 wp_list_categories( array(
                     'taxonomy'   => $tax->name,
                     'show_count' => true,
                     'title_li'   => $tax->labels->name,
                 ) );
+
                 switch ( $tax->name ) {
                     case 'medientyp':
                         $obmedientyp = ob_get_contents();
@@ -579,6 +598,7 @@ class MyMaterialpool {
                 ob_clean();
                 remove_filter( 'term_link', array( 'MyMaterialpool', 'term_link_filter' ) );
                 remove_filter( 'get_terms', array( 'MyMaterialpool', 'get_terms_filter' ) );
+	            remove_filter( 'category_list_link_attributes', array( 'MyMaterialpool', 'category_list_link_attributes' ) );
                 if ( $tax->name == 'materialschlagworte' ) {
                     remove_filter( 'list_cats', array( 'MyMaterialpool', 'modify_list_cats' ) );
                 }
@@ -612,6 +632,37 @@ class MyMaterialpool {
         }
         wp_reset_query();
 		return $content;
+    }
+
+    public static function category_list_link_attributes ($atts, $category, $depth, $args, $id ) {
+        //var_dump( $atts, $category, $depth, $args, $id);
+        $slug = $category->slug;
+        $parent = $category->taxonomy;
+        switch ( $parent) {
+	        case 'medientyp':
+		        $data = get_query_var( "mpoolfacet_medientyp" );
+		        break;
+	        case 'bildungsstufe':
+		        $data = get_query_var( "mpoolfacet_bildungsstufe" );
+		        break;
+	        case 'altersstufe':
+		        $data = get_query_var( "mpoolfacet_altersstufe" );
+		        break;
+	        case 'schlagwort':
+		        $data = get_query_var( "mpoolfacet_schlagwort" );
+		        break;
+	        case 'rubrik':
+		        $data = get_query_var( "mpoolfacet_rubrik" );
+		        break;
+        }
+
+        if ( is_array( $data ) ) {
+            $data = array_unique( $data );
+            if ( in_array( $slug, $data )) {
+                unset( $atts['href']);
+            }
+        }
+        return $atts;
     }
 
     public static function removeUrl ( $url, $tax, $slug ) {
